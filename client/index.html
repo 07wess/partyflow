@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Socket.io Client</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; background: #0f172a; color: #f8fafc; }
+    #status { padding: 0.5rem 1rem; border-radius: 4px; display: inline-block; font-weight: bold; }
+    .connected { background: #166534; color: #86efac; }
+    .disconnected { background: #991b1b; color: #fca5a5; }
+    #messages { list-style-type: none; padding: 0; margin-top: 1rem; max-height: 300px; overflow-y: auto; background: #1e293b; border-radius: 6px; padding: 1rem; }
+    #messages li { padding: 0.25rem 0; border-bottom: 1px solid #334155; }
+    input, button { padding: 0.5rem; font-size: 1rem; border-radius: 4px; border: 1px solid #475569; }
+    input { background: #1e293b; color: white; width: 300px; }
+    button { background: #2563eb; color: white; cursor: pointer; }
+    button:hover { background: #1d4ed8; }
+  </style>
+</head>
+<body>
+  <h1>⚡ Socket.io İstemci</h1>
+  <div>Sunucu Durumu: <span id="status" class="disconnected">Bağlantı Yok</span></div>
+
+  <div style="margin-top: 1.5rem;">
+    <input id="input" autocomplete="off" placeholder="Mesaj yazın..." />
+    <button id="sendBtn">Gönder</button>
+  </div>
+
+  <ul id="messages"></ul>
+
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script>
+    const socket = io('http://localhost:5000');
+    const statusEl = document.getElementById('status');
+    const messages = document.getElementById('messages');
+    const input = document.getElementById('input');
+    const sendBtn = document.getElementById('sendBtn');
+
+    socket.on('connect', () => {
+      statusEl.textContent = 'Bağlandı (' + socket.id + ')';
+      statusEl.className = 'connected';
+    });
+
+    socket.on('disconnect', () => {
+      statusEl.textContent = 'Bağlantı Kesildi';
+      statusEl.className = 'disconnected';
+    });
+
+    socket.on('message', (msg) => {
+      const li = document.createElement('li');
+      li.textContent = `[${msg.time || ''}] ${msg.sender}: ${msg.text}`;
+      messages.appendChild(li);
+      messages.scrollTop = messages.scrollHeight;
+    });
+
+    sendBtn.addEventListener('click', () => {
+      if (input.value.trim()) {
+        socket.emit('message', input.value.trim());
+        input.value = '';
+      }
+    });
+
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendBtn.click();
+    });
+  </script>
+</body>
+</html>
