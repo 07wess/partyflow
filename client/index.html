@@ -349,7 +349,7 @@
           </div>
 
           <div class="relative z-10 mt-8 flex flex-wrap gap-3.5">
-            <button onclick="openCreateRoomModal()" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-6 py-3.5 rounded-2xl text-xs sm:text-sm font-bold transition shadow-xl shadow-purple-600/35 flex items-center gap-2 active:scale-95">
+            <button onclick="quickStartRoom()" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-6 py-3.5 rounded-2xl text-xs sm:text-sm font-bold transition shadow-xl shadow-purple-600/35 flex items-center gap-2 active:scale-95">
               <span>🚀</span>
               <span>Hemen Bir Salon Başlat</span>
             </button>
@@ -1189,6 +1189,7 @@
     let currentRoomId = null;
     let currentRoomData = null;
     let pendingJoinRoomId = null;
+    let myPeerId = null;
     const defaultPresetRooms = [
       { id: 'sinema-salonu', name: '🍿 Gece Sineması Kulübü', category: 'movie', hasPassword: false, userCount: 0, isPlaying: true, hostName: 'Sistem' },
       { id: 'lofi-cafe', name: '☕ Lofi & Sohbet Lounge', category: 'music', hasPassword: false, userCount: 0, isPlaying: true, hostName: 'Sistem' },
@@ -1452,45 +1453,6 @@
     }
 
     // ========================================================
-    // F. SANAL SİNEMA KOLTUKLARI ENGINE
-    // ========================================================
-    function updateTheaterSeatsUI(users) {
-      const container = document.getElementById('theaterSeatsContainer');
-      if (!container) return;
-      container.innerHTML = '';
-
-      users.forEach(u => {
-        const seat = document.createElement('div');
-        seat.id = `seat-${u.id}`;
-        seat.className = 'relative flex items-center gap-1.5 bg-white/5 border border-white/10 px-2 py-1 rounded-xl group transition hover:border-purple-500/40';
-        seat.title = u.username;
-        seat.innerHTML = `
-          <div class="relative">
-            <img src="${u.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" class="w-5 h-5 rounded-full object-cover ring-1 ring-white/20" />
-            <span class="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-          </div>
-          <span class="text-[10px] font-semibold text-zinc-300 truncate max-w-[65px]">${escapeHtml(u.username)}</span>
-          <div id="seat-bubble-${u.id}" class="hidden absolute -top-7 left-1/2 -translate-x-1/2 bg-purple-600 text-white text-xs px-2 py-0.5 rounded-md shadow-xl pointer-events-none transition animate-bounce"></div>
-        `;
-        container.appendChild(seat);
-      });
-    }
-
-    function triggerSeatReactionBubble(senderName, emoji) {
-      const seats = document.querySelectorAll('#theaterSeatsContainer > div');
-      seats.forEach(s => {
-        if (s.title === senderName) {
-          const bubble = s.querySelector('[id^="seat-bubble-"]');
-          if (bubble) {
-            bubble.textContent = emoji;
-            bubble.classList.remove('hidden');
-            setTimeout(() => bubble.classList.add('hidden'), 2000);
-          }
-        }
-      });
-    }
-
-    // ========================================================
     // G. LOBİ & ODA LİSTELEME
     // ========================================================
     function fetchLobbyRooms() {
@@ -1581,6 +1543,35 @@
       joinRoom(roomId, false);
     }
 
+    function quickStartRoom() {
+      const roomName = `${MY_NAME}'in Sinema Salonu 🍿`;
+      const initialVideo = 'https://www.youtube.com/watch?v=jfKfPfyJRdk';
+      showToast('🚀 Salonunuz anında başlatılıyor...', 'info', 2000);
+
+      if (!socket || !socket.connected) {
+        showToast('Sunucu bağlantısı bekleniyor, lütfen birkaç saniye bekleyin...', 'warning', 2500);
+        return;
+      }
+
+      socket.emit('room:create', {
+        roomName,
+        category: 'movie',
+        controlMode: 'all',
+        password: '',
+        initialVideo,
+        username: MY_NAME,
+        avatar: MY_AVATAR
+      }, (res) => {
+        if (res && res.success && res.roomId) {
+          showToast(`"${roomName}" hazır! Salona giriliyor... 🍿`, 'success', 2000);
+          joinRoom(res.roomId, false, null);
+        } else {
+          showToast((res && res.error) || 'Hemen başlatılamadı, ayar penceresi açılıyor...', 'error', 2500);
+          openCreateRoomModal();
+        }
+      });
+    }
+
     function openCreateRoomModal(prefilledName = null) {
       const modal = document.getElementById('createRoomModal');
       const input = document.getElementById('newRoomName');
@@ -1603,15 +1594,24 @@
     function submitCreateRoom() {
       const nameInput = document.getElementById('newRoomName');
       const roomName = (nameInput && nameInput.value.trim()) || `${MY_NAME}'in Sinema Salonu 🍿`;
-      const category = document.getElementById('newRoomCategory').value;
-      const controlMode = document.getElementById('newRoomControlMode').value;
-      const password = document.getElementById('newRoomPassword').value;
-      const initialVideo = document.getElementById('newRoomVideo').value.trim();
+      const category = (document.getElementById('newRoomCategory') && document.getElementById('newRoomCategory').value) || 'movie';
+      const controlMode = (document.getElementById('newRoomControlMode') && document.getElementById('newRoomControlMode').value) || 'all';
+      const password = (document.getElementById('newRoomPassword') && document.getElementById('newRoomPassword').value.trim()) || '';
+      const initialVideo = (document.getElementById('newRoomVideo') && document.getElementById('newRoomVideo').value.trim()) || 'https://www.youtube.com/watch?v=jfKfPfyJRdk';
 
       const btn = document.getElementById('submitCreateRoomBtn');
       if (btn) {
         btn.disabled = true;
         btn.innerHTML = '<span>⏳ Salon Başlatılıyor...</span>';
+      }
+
+      if (!socket || !socket.connected) {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = 'Salonu Başlat ve Katıl 🚀';
+        }
+        showToast('Sunucuya bağlanılamadı. Lütfen sayfayı yenileyin.', 'error');
+        return;
       }
 
       socket.emit('room:create', {
@@ -1630,7 +1630,7 @@
         if (res && res.success) {
           closeCreateRoomModal();
           showToast(`"${roomName}" salonu başarıyla açıldı! 🚀`, 'success');
-          joinRoom(res.roomId, false, password);
+          joinRoom(res.roomId, false, password || null);
         } else {
           showToast((res && res.error) || 'Salon açılamadı.', 'error');
         }
@@ -1641,6 +1641,11 @@
       if (hasPassword && !password) {
         pendingJoinRoomId = roomId;
         document.getElementById('passwordModal').classList.remove('hidden');
+        return;
+      }
+
+      if (!socket || !socket.connected) {
+        showToast('Sunucuya bağlanılamadı. Lütfen sayfayı yenileyin.', 'error');
         return;
       }
 
@@ -2716,7 +2721,6 @@
     // ========================================================
     // M. WEBRTC KAMERA & SES & EKRAN PAYLAŞIMI
     // ========================================================
-    let myPeerId = null;
     let localStream = null;
     let localScreenStream = null;
     let peer = null;

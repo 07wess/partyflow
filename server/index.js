@@ -339,7 +339,7 @@ io.on('connection', (socket) => {
         name: roomName,
         hostId: socket.id,
         hostName: (data && data.username) || 'Host',
-        password: (data && data.password && typeof data.password === 'string') ? data.password.trim() : null,
+        password: (data && data.password && typeof data.password === 'string' && data.password.trim()) ? data.password.trim() : null,
         isPrivate: !!(data && data.isPrivate),
         controlMode: (data && data.controlMode) || 'all',
         category: (data && data.category) || 'movie',
