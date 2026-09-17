@@ -82,6 +82,8 @@ const rooms = {
     snackBreak: false,
     snackInterval: null,
     breakTimer: 0,
+    hypeScore: 20,
+    isFeverActive: false,
     playlist: [
       { id: 'p1', title: 'Big Buck Bunny (Film Testi)', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', addedBy: 'Sistem' },
       { id: 'p2', title: 'Lofi Chill Hip Hop', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', addedBy: 'Sistem' }
@@ -106,6 +108,8 @@ const rooms = {
     snackBreak: false,
     snackInterval: null,
     breakTimer: 0,
+    hypeScore: 20,
+    isFeverActive: false,
     playlist: [
       { id: 'p3', title: 'Lofi Hip Hop Radio 24/7', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', addedBy: 'Sistem' }
     ],
@@ -233,6 +237,8 @@ io.on('connection', (socket) => {
       snackBreak: false,
       snackInterval: null,
       breakTimer: 0,
+      hypeScore: 20,
+      isFeverActive: false,
       playlist: [
         {
           id: 'item-1',
@@ -279,6 +285,8 @@ io.on('connection', (socket) => {
         snackBreak: false,
         snackInterval: null,
         breakTimer: 0,
+        hypeScore: 20,
+        isFeverActive: false,
         playlist: [],
         currentPlaylistIndex: 0,
         users: {}
@@ -657,35 +665,53 @@ io.on('connection', (socket) => {
     });
   });
 
-  // Anlık Tepki Efektleri (❤️, 😂, 😭, 😡) & Hype Arttırma
+  // Hype Artış Mantığı (Ortak Yardımcı Fonksiyon)
+  function applyHypeBoost(roomId, boostAmount, senderName) {
+    const room = rooms[roomId];
+    if (!room) return;
+    if (typeof room.hypeScore !== 'number') room.hypeScore = 20;
+
+    // Eğer Party Fever zaten aktifse skoru 100'de tut
+    if (room.isFeverActive) {
+      io.to(roomId).emit('hype:updated', { hypeScore: 100, isFever: true });
+      return;
+    }
+
+    room.hypeScore = Math.min(100, room.hypeScore + boostAmount);
+
+    if (room.hypeScore >= 100) {
+      room.isFeverActive = true;
+      room.hypeScore = 100;
+      io.to(roomId).emit('hype:updated', { hypeScore: 100, isFever: true });
+      io.to(roomId).emit('hype:fever', { triggerBy: senderName || 'Salon' });
+
+      // 6 saniye boyunca %100 Party Fever kutlaması sürsün, sonra %20'ye dönsün
+      setTimeout(() => {
+        if (rooms[roomId]) {
+          rooms[roomId].isFeverActive = false;
+          rooms[roomId].hypeScore = 20;
+          io.to(roomId).emit('hype:updated', { hypeScore: 20, isFever: false });
+        }
+      }, 6000);
+    } else {
+      io.to(roomId).emit('hype:updated', { hypeScore: room.hypeScore, isFever: false });
+    }
+  }
+
+  // Anlık Tepki Efektleri (❤️, 😂, 😭, 😡, 🍿, 🔥, 🎉) & Hype Arttırma
   socket.on('reaction:trigger', ({ roomId, type, sender }) => {
     io.to(roomId).emit('reaction:broadcast', {
       id: Math.random().toString(36).substring(2, 9),
       type,
       sender: sender || socket.username
     });
-
-    const room = rooms[roomId];
-    if (room) {
-      room.hypeScore = (room.hypeScore || 0) + 4;
-      if (room.hypeScore >= 100) {
-        room.hypeScore = 0;
-        io.to(roomId).emit('hype:fever', { triggerBy: sender || socket.username });
-      }
-      io.to(roomId).emit('hype:updated', { hypeScore: room.hypeScore });
-    }
+    applyHypeBoost(roomId, 6, sender || socket.username);
   });
 
-  // Hype Meter Doğrudan Arttırma
-  socket.on('hype:boost', ({ roomId, amount }) => {
-    const room = rooms[roomId];
-    if (!room) return;
-    room.hypeScore = (room.hypeScore || 0) + (amount || 6);
-    if (room.hypeScore >= 100) {
-      room.hypeScore = 0;
-      io.to(roomId).emit('hype:fever', { triggerBy: socket.username || 'Salon' });
-    }
-    io.to(roomId).emit('hype:updated', { hypeScore: room.hypeScore });
+  // Hype Meter Doğrudan Arttırma Butonu (+Hype)
+  socket.on('hype:boost', ({ roomId, amount, hype }) => {
+    const boost = typeof amount === 'number' ? amount : (typeof hype === 'number' ? hype : 12);
+    applyHypeBoost(roomId, boost, socket.username || 'Salon');
   });
 
   // Gerçek Zamanlı Ping / Latency Kontrolü

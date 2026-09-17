@@ -1259,38 +1259,6 @@
     }
 
     // ========================================================
-    // D. HYPE METER & PARTY FEVER
-    // ========================================================
-    function boostHype(amount = 12) {
-      socket.emit('hype:boost', { roomId: currentRoomId, amount });
-    }
-
-    socket.on('hype:updated', ({ hypeScore }) => {
-      currentHypeScore = Math.min(100, Math.max(0, hypeScore));
-      const bar = document.getElementById('hypeProgressBar');
-      const txt = document.getElementById('hypePercentText');
-      if (bar) bar.style.width = `${currentHypeScore}%`;
-      if (txt) txt.textContent = `${currentHypeScore}%`;
-    });
-
-    socket.on('hype:fever', ({ triggerBy }) => {
-      triggerPartyFever(triggerBy);
-    });
-
-    function triggerPartyFever(triggerBy) {
-      showToast(`🎉 SALON PARTY FEVER MODUNDA! (${triggerBy} enerjiyi patlattı! 🔥)`, 'warning', 6000);
-      document.body.classList.add('party-fever-active');
-      setTimeout(() => document.body.classList.remove('party-fever-active'), 1500);
-
-      const emojis = ['🎉', '🔥', '🍿', '🚀', '❤️', '🍿', '✨', '🔥'];
-      for (let i = 0; i < 12; i++) {
-        setTimeout(() => {
-          spawnFloatingReaction(emojis[Math.floor(Math.random() * emojis.length)]);
-        }, i * 150);
-      }
-    }
-
-    // ========================================================
     // E. CANLI ODA ANKETİ ENGINE
     // ========================================================
     function openCreatePollModal() {
@@ -1584,6 +1552,7 @@
       updatePlaylistUI(room.playlist || [], room.currentPlaylistIndex || 0);
       updateUsersListUI(room.users || []);
       updateTheaterSeatsUI(room.users || []);
+      updateHypeUI(typeof room.hypeScore === 'number' ? room.hypeScore : 20, !!room.isFeverActive);
 
       if (room.activePoll) {
         currentActivePoll = room.activePoll;
@@ -2326,49 +2295,78 @@
       }, 2400);
     }
 
-    let currentHype = 15;
-    function boostHype() {
-      currentHype = Math.min(100, currentHype + 10);
-      updateHypeUI(currentHype);
-      socket.emit('hype:boost', { roomId: currentRoomId, hype: currentHype });
-      playLocalAudioEffect('applause');
-      showToast('🚀 Salona +10 Hype Bastın!', 'success', 2000);
-      
-      if (currentHype >= 100) {
-        triggerPartyFever();
+    // ========================================================
+    // HYPE METER & PARTY FEVER MOTORU
+    // ========================================================
+    let currentHypeScore = 20;
+    let isPartyFeverRunning = false;
+
+    function boostHype(amount = 12) {
+      if (isPartyFeverRunning) {
+        showToast('🔥 Party Fever zaten devrede! Coşmaya devam!', 'info', 1500);
+        spawnFloatingReaction('🔥');
+        return;
       }
+      socket.emit('hype:boost', { roomId: currentRoomId, amount });
+      playLocalAudioEffect('applause');
+      spawnFloatingReaction('🚀');
+      showToast('🚀 Salona +12 Enerji Bastın!', 'success', 1500);
     }
 
-    socket.on('hype:updated', ({ hype }) => {
-      currentHype = hype || 0;
-      updateHypeUI(currentHype);
-      if (currentHype >= 100) {
-        triggerPartyFever();
-      }
+    socket.on('hype:updated', (data) => {
+      const score = typeof data.hypeScore === 'number' ? data.hypeScore : (typeof data.hype === 'number' ? data.hype : 20);
+      currentHypeScore = Math.min(100, Math.max(0, score));
+      updateHypeUI(currentHypeScore, !!data.isFever);
     });
 
-    function updateHypeUI(val) {
+    socket.on('hype:fever', ({ triggerBy }) => {
+      triggerPartyFever(triggerBy);
+    });
+
+    function updateHypeUI(val, isFever = false) {
       const percentText = document.getElementById('hypePercentText');
       const bar = document.getElementById('hypeProgressBar');
-      if (percentText) percentText.textContent = `${val}%`;
-      if (bar) bar.style.width = `${val}%`;
+      if (percentText) {
+        percentText.textContent = (isFever || val >= 100) ? '🔥 %100' : `${val}%`;
+      }
+      if (bar) {
+        bar.style.width = `${Math.min(100, Math.max(0, val))}%`;
+        if (isFever || val >= 100) {
+          bar.classList.add('animate-pulse', 'ring-2', 'ring-amber-400');
+        } else {
+          bar.classList.remove('animate-pulse', 'ring-2', 'ring-amber-400');
+        }
+      }
     }
 
-    function triggerPartyFever() {
+    function triggerPartyFever(triggerBy) {
+      if (isPartyFeverRunning) return;
+      isPartyFeverRunning = true;
+      updateHypeUI(100, true);
+
+      // Ses efekti çal (Korna / Fanfar)
+      playSFX('horn');
+
+      // Video alanı ve sayfa titreşim & ışıltı efekti
       const videoCont = document.getElementById('videoContainer');
       if (videoCont) videoCont.classList.add('party-fever-active');
-      playSFX('horn');
-      showToast('🎉🔥 PARTY FEVER! SALON COŞTU! 🔥🎉', 'warning', 4500);
-      for (let i = 0; i < 16; i++) {
+      document.body.classList.add('party-fever-active');
+
+      showToast(`🎉🔥 PARTY FEVER PATLADI! (${triggerBy || 'Biri'} barı %100 yaptı!) 🍿🎉`, 'warning', 6000);
+
+      // Ekranda 20 adet uçuşan parti emojisi fırtınası
+      const celebrationEmojis = ['🍿', '🔥', '🎉', '🚀', '✨', '🍕', '❤️', '🏆'];
+      for (let i = 0; i < 20; i++) {
         setTimeout(() => {
-          const em = ['🍿', '🔥', '🎉', '🚀', '✨', '🍕'][Math.floor(Math.random() * 6)];
+          const em = celebrationEmojis[Math.floor(Math.random() * celebrationEmojis.length)];
           spawnFloatingReaction(em);
-        }, i * 140);
+        }, i * 160);
       }
+
       setTimeout(() => {
+        isPartyFeverRunning = false;
         if (videoCont) videoCont.classList.remove('party-fever-active');
-        currentHype = 25;
-        updateHypeUI(currentHype);
+        document.body.classList.remove('party-fever-active');
       }, 6000);
     }
 
