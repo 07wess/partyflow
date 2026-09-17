@@ -336,6 +336,36 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Ekran Paylaşımı (Netflix / Dizi / WebRTC Screen Share)
+  socket.on('screenshare:start', ({ roomId }) => {
+    socket.to(roomId).emit('screenshare:started', {
+      sender: socket.username,
+      peerId: socket.peerId
+    });
+
+    io.to(roomId).emit('chat:receive', {
+      id: Date.now(),
+      sender: 'PartyFlow',
+      avatar: 'https://cdn-icons-png.flaticon.com/512/3658/3658773.png',
+      message: `🖥️ ${socket.username} ekranını yayına verdi (Netflix / Film / Dizi).`,
+      isSystem: true,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    });
+  });
+
+  socket.on('screenshare:stop', ({ roomId }) => {
+    socket.to(roomId).emit('screenshare:stopped', { sender: socket.username });
+
+    io.to(roomId).emit('chat:receive', {
+      id: Date.now(),
+      sender: 'PartyFlow',
+      avatar: 'https://cdn-icons-png.flaticon.com/512/3658/3658773.png',
+      message: `🖥️ ${socket.username} ekran paylaşımını sonlandırdı.`,
+      isSystem: true,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    });
+  });
+
   // Anlık Tepki Efektleri (❤️, 😂, 😭, 😡)
   socket.on('reaction:trigger', ({ roomId, type, sender }) => {
     io.to(roomId).emit('reaction:broadcast', {

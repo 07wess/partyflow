@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>PartyFlow Sync</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 16px;
+      width: 260px;
+      background: #09090b;
+      color: #fafafa;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 12px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .title {
+      font-weight: 900;
+      font-size: 15px;
+      background: linear-gradient(to right, #c084fc, #f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .field {
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      color: #a1a1aa;
+      margin-bottom: 4px;
+      font-size: 11px;
+    }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      background: #18181b;
+      border: 1px solid #27272a;
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      outline: none;
+      font-size: 12px;
+    }
+    input:focus {
+      border-color: #a855f7;
+    }
+    button {
+      width: 100%;
+      background: #8b5cf6;
+      border: none;
+      color: white;
+      padding: 8px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #7c3aed;
+    }
+    .status {
+      margin-top: 10px;
+      padding: 6px;
+      text-align: center;
+      border-radius: 6px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      font-size: 11px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <span style="font-size: 18px;">🍿</span>
+    <span class="title">PartyFlow Teleparty</span>
+  </div>
+
+  <div class="field">
+    <label>PartyFlow Sunucu Adresi</label>
+    <input id="serverUrl" type="text" value="http://localhost:5000" />
+  </div>
+
+  <div class="field">
+    <label>Oda Adı (Room ID)</label>
+    <input id="roomId" type="text" value="ask-yuvasi" />
+  </div>
+
+  <div class="field">
+    <label>Kullanıcı Adınız</label>
+    <input id="username" type="text" value="Wesley" />
+  </div>
+
+  <button id="saveBtn">Kaydet ve Bağlan</button>
+
+  <div id="statusMsg" class="status">✓ Ayarlar kaydedildi!</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

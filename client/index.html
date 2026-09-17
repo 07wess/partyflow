@@ -115,6 +115,7 @@
           <button onclick="quickLoad('https://www.youtube.com/watch?v=jfKfPfyJRdk')" class="hover:text-purple-300 bg-zinc-800 px-2 py-0.5 rounded transition">🎵 Lofi</button>
           <button onclick="quickLoad('https://www.youtube.com/watch?v=aqz-KE-bpKQ')" class="hover:text-purple-300 bg-zinc-800 px-2 py-0.5 rounded transition">🍿 Animasyon</button>
           <button onclick="quickLoad('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')" class="hover:text-purple-300 bg-zinc-800 px-2 py-0.5 rounded transition">📽️ MP4</button>
+          <button onclick="quickLoad('https://www.twitch.tv/elraenn')" class="hover:text-purple-300 bg-zinc-800 px-2 py-0.5 rounded transition">🟣 Twitch</button>
         </div>
       </div>
 
@@ -129,10 +130,25 @@
         <!-- 2. Doğrudan HTML5 Video Oynatıcı -->
         <video id="html5Player" class="hidden w-full h-full object-contain" playsinline preload="auto"></video>
 
-        <!-- 3. Uçuşan Reaksiyon Emojileri Katmanı -->
+        <!-- 3. Twitch Canlı Yayın Iframe Konteyneri -->
+        <div id="twitchWrapper" class="hidden w-full h-full">
+          <iframe id="twitchPlayer" class="w-full h-full border-0" allowfullscreen></iframe>
+        </div>
+
+        <!-- 4. Canlı Ekran Paylaşımı Oynatıcısı (Netflix / Dizi / Masaüstü) -->
+        <video id="screenSharePlayer" class="hidden w-full h-full object-contain" autoplay playsinline></video>
+
+        <!-- Ekran Paylaşımı Bildirim Rozeti -->
+        <div id="screenShareBanner" class="hidden absolute top-3 left-3 bg-indigo-600/90 backdrop-blur-md text-white px-3 py-1.5 rounded-xl text-xs font-semibold z-30 flex items-center gap-2 shadow-2xl border border-indigo-400/40 animate-pulse">
+          <span class="w-2 h-2 rounded-full bg-red-400"></span>
+          <span id="screenShareBannerText">🖥️ Canlı Ekran Yayını Aktif (Netflix / Dizi)</span>
+          <button id="stopShareBannerBtn" onclick="stopScreenShare()" class="bg-black/50 hover:bg-black/80 px-2 py-0.5 rounded-lg text-[11px] transition text-zinc-200">Yayını Durdur</button>
+        </div>
+
+        <!-- 5. Uçuşan Reaksiyon Emojileri Katmanı -->
         <div id="reactionsLayer" class="absolute inset-0 pointer-events-none overflow-hidden z-30"></div>
 
-        <!-- 4. Senkronize Mola Perdesi (Snack Break) -->
+        <!-- 6. Senkronize Mola Perdesi (Snack Break) -->
         <div id="snackOverlay" class="hidden absolute inset-0 bg-black/90 backdrop-blur-md z-40 flex flex-col items-center justify-center text-center p-6 transition-all duration-300">
           <div class="text-7xl animate-bounce mb-3">🍿🥤</div>
           <h2 class="text-3xl font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-400 to-amber-200">Atıştırmalık Molası!</h2>
@@ -185,6 +201,12 @@
         <div class="flex items-center gap-3 flex-1">
           <button id="playPauseBtn" onclick="togglePlayPause()" class="bg-purple-600 hover:bg-purple-500 text-white w-10 h-10 rounded-xl flex items-center justify-center text-base transition shadow-md flex-shrink-0">
             ▶
+          </button>
+
+          <!-- Ekran Paylaşımı Butonu (Netflix / Dizi / Canlı Yayın) -->
+          <button id="screenShareBtn" onclick="toggleScreenShare()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-md flex-shrink-0" title="Netflix veya yan sekmeyi canlı yayınla">
+            <span id="screenShareBtnIcon">🖥️</span>
+            <span id="screenShareBtnText" class="hidden sm:inline">Ekran Paylaş</span>
           </button>
           
           <div class="flex-1 flex flex-col gap-1">
@@ -497,22 +519,41 @@
       loadVideoSource(url, true);
     }
 
+    const twitchWrapper = document.getElementById('twitchWrapper');
+    const twitchPlayer = document.getElementById('twitchPlayer');
+    const screenSharePlayer = document.getElementById('screenSharePlayer');
+    const screenShareBanner = document.getElementById('screenShareBanner');
+
     function loadVideoSource(url, broadcast = false) {
+      hideScreenShareUI();
       const ytId = extractYouTubeId(url);
 
       if (ytId) {
         currentVideoType = 'youtube';
         youtubeWrapper.classList.remove('hidden');
         html5Player.classList.add('hidden');
+        twitchWrapper.classList.add('hidden');
         html5Player.pause();
 
         if (isYtReady && ytPlayer) {
           ytPlayer.loadVideoById(ytId);
           ytPlayer.pauseVideo();
         }
+      } else if (url.includes('twitch.tv')) {
+        currentVideoType = 'twitch';
+        youtubeWrapper.classList.add('hidden');
+        html5Player.classList.add('hidden');
+        twitchWrapper.classList.remove('hidden');
+        if (isYtReady && ytPlayer) ytPlayer.pauseVideo();
+        html5Player.pause();
+
+        // Kanal adını çıkar
+        const channel = url.split('twitch.tv/')[1].split('/')[0].split('?')[0];
+        twitchPlayer.src = `https://player.twitch.tv/?channel=${channel}&parent=${window.location.hostname || 'localhost'}&autoplay=true`;
       } else {
         currentVideoType = 'direct';
         youtubeWrapper.classList.add('hidden');
+        twitchWrapper.classList.add('hidden');
         html5Player.classList.remove('hidden');
         if (isYtReady && ytPlayer) ytPlayer.pauseVideo();
 
@@ -649,10 +690,12 @@
     }
 
     // ========================================================
-    // 7. CANLI KAMERA & SES (WEBRTC & PEERJS)
+    // 7. CANLI KAMERA & SES (WEBRTC & PEERJS) & EKRAN PAYLAŞIMI
     // ========================================================
     let myPeerId = null;
+    let partnerPeerId = null;
     let localStream = null;
+    let localScreenStream = null;
     let peer = null;
     const localVideo = document.getElementById('localVideo');
     const remoteVideo = document.getElementById('remoteVideo');
@@ -682,13 +725,20 @@
         socket.emit('peer:update', { roomId: MY_ROOM, peerId: id });
       });
 
-      // Gelen Görüntülü Arama
+      // Gelen Görüntülü Arama (Kamera veya Ekran Paylaşımı)
       peer.on('call', (call) => {
-        call.answer(localStream);
-        call.on('stream', (remoteStream) => {
-          remoteVideo.srcObject = remoteStream;
-          remoteCamPlaceholder.classList.add('hidden');
-        });
+        if (call.metadata && call.metadata.type === 'screenshare') {
+          call.answer(); // Ekran yayınını alırken kendi kameramızı göndermemize gerek yok
+          call.on('stream', (remoteScreenStream) => {
+            showRemoteScreenShare(remoteScreenStream);
+          });
+        } else {
+          call.answer(localStream);
+          call.on('stream', (remoteCamStream) => {
+            remoteVideo.srcObject = remoteCamStream;
+            remoteCamPlaceholder.classList.add('hidden');
+          });
+        }
       });
 
       peer.on('error', (err) => console.warn('PeerJS Uyarısı:', err));
@@ -697,25 +747,35 @@
     // Odaya yeni biri girdiğinde veya peer güncellendiğinde ara
     socket.on('user:joined', ({ username, peerId }) => {
       partnerNameLabel.textContent = username || 'Partner';
-      if (peerId && localStream && peer) {
-        const call = peer.call(peerId, localStream);
-        if (call) {
-          call.on('stream', (remoteStream) => {
-            remoteVideo.srcObject = remoteStream;
-            remoteCamPlaceholder.classList.add('hidden');
-          });
+      if (peerId) {
+        partnerPeerId = peerId;
+        if (localStream && peer) {
+          const call = peer.call(peerId, localStream);
+          if (call) {
+            call.on('stream', (remoteStream) => {
+              remoteVideo.srcObject = remoteStream;
+              remoteCamPlaceholder.classList.add('hidden');
+            });
+          }
+        }
+        // Eğer şu an biz ekran paylaşıyorsak yeni katılan partnere de yayını gönder
+        if (localScreenStream && peer) {
+          peer.call(peerId, localScreenStream, { metadata: { type: 'screenshare' } });
         }
       }
     });
 
     socket.on('peer:updated', ({ peerId }) => {
-      if (peerId && localStream && peer) {
-        const call = peer.call(peerId, localStream);
-        if (call) {
-          call.on('stream', (remoteStream) => {
-            remoteVideo.srcObject = remoteStream;
-            remoteCamPlaceholder.classList.add('hidden');
-          });
+      if (peerId) {
+        partnerPeerId = peerId;
+        if (localStream && peer) {
+          const call = peer.call(peerId, localStream);
+          if (call) {
+            call.on('stream', (remoteStream) => {
+              remoteVideo.srcObject = remoteStream;
+              remoteCamPlaceholder.classList.add('hidden');
+            });
+          }
         }
       }
     });
@@ -724,6 +784,111 @@
       remoteCamPlaceholder.classList.remove('hidden');
       document.getElementById('remoteStatusText').textContent = 'Partner Ayrıldı';
       remoteVideo.srcObject = null;
+      partnerPeerId = null;
+    });
+
+    // ========================================================
+    // EKRAN PAYLAŞIMI (NETFLİX, DİZİ, YAN SEKME CANLI YAYINI)
+    // ========================================================
+    async function toggleScreenShare() {
+      if (localScreenStream) {
+        stopScreenShare();
+      } else {
+        await startScreenShare();
+      }
+    }
+
+    async function startScreenShare() {
+      try {
+        localScreenStream = await navigator.mediaDevices.getDisplayMedia({
+          video: { cursor: 'always' },
+          audio: true // Sekme sesini (Netflix sesi) de ilet
+        });
+
+        // Kendi ekranımızda oynatıcıyı ekran yayınına al
+        showLocalScreenShare(localScreenStream);
+
+        // Soket ile odaya bildir
+        socket.emit('screenshare:start', { roomId: MY_ROOM });
+
+        // Partnere PeerJS ile ekran akışını ilet
+        if (partnerPeerId && peer) {
+          peer.call(partnerPeerId, localScreenStream, { metadata: { type: 'screenshare' } });
+        }
+
+        // Tarayıcının kendi "Paylaşımı Durdur" butonuna basılırsa
+        localScreenStream.getVideoTracks()[0].onended = () => {
+          stopScreenShare();
+        };
+
+        // Buton görünümünü güncelle
+        document.getElementById('screenShareBtn').classList.replace('bg-indigo-600', 'bg-red-600');
+        document.getElementById('screenShareBtn').classList.replace('hover:bg-indigo-500', 'hover:bg-red-500');
+        document.getElementById('screenShareBtnText').textContent = 'Yayını Durdur';
+
+      } catch (err) {
+        console.warn('Ekran paylaşımı başlatılamadı:', err.message);
+      }
+    }
+
+    function stopScreenShare() {
+      if (localScreenStream) {
+        localScreenStream.getTracks().forEach(track => track.stop());
+        localScreenStream = null;
+      }
+      socket.emit('screenshare:stop', { roomId: MY_ROOM });
+      hideScreenShareUI();
+
+      // Buton görünümünü geri al
+      document.getElementById('screenShareBtn').classList.replace('bg-red-600', 'bg-indigo-600');
+      document.getElementById('screenShareBtn').classList.replace('hover:bg-red-500', 'hover:bg-indigo-500');
+      document.getElementById('screenShareBtnText').textContent = 'Ekran Paylaş';
+    }
+
+    function showLocalScreenShare(stream) {
+      youtubeWrapper.classList.add('hidden');
+      html5Player.classList.add('hidden');
+      twitchWrapper.classList.add('hidden');
+      screenSharePlayer.classList.remove('hidden');
+      screenSharePlayer.srcObject = stream;
+      screenShareBanner.classList.remove('hidden');
+      document.getElementById('screenShareBannerText').textContent = '🖥️ Ekranınız Canlı Yayında (Netflix / Dizi)';
+    }
+
+    function showRemoteScreenShare(stream) {
+      youtubeWrapper.classList.add('hidden');
+      html5Player.classList.add('hidden');
+      twitchWrapper.classList.add('hidden');
+      screenSharePlayer.classList.remove('hidden');
+      screenSharePlayer.srcObject = stream;
+      screenShareBanner.classList.remove('hidden');
+      document.getElementById('screenShareBannerText').textContent = '🖥️ Partnerinizin Ekranı Canlı Yayında (Netflix / Dizi)';
+      document.getElementById('stopShareBannerBtn').classList.add('hidden');
+    }
+
+    function hideScreenShareUI() {
+      screenSharePlayer.classList.add('hidden');
+      screenSharePlayer.srcObject = null;
+      screenShareBanner.classList.add('hidden');
+      document.getElementById('stopShareBannerBtn').classList.remove('hidden');
+
+      // Eski oynatıcıya geri dön
+      if (currentVideoType === 'youtube') {
+        youtubeWrapper.classList.remove('hidden');
+      } else if (currentVideoType === 'twitch') {
+        twitchWrapper.classList.remove('hidden');
+      } else {
+        html5Player.classList.remove('hidden');
+      }
+    }
+
+    socket.on('screenshare:started', ({ sender }) => {
+      document.getElementById('screenShareBannerText').textContent = `🖥️ ${sender} ekranını paylaşıyor...`;
+      screenShareBanner.classList.remove('hidden');
+    });
+
+    socket.on('screenshare:stopped', () => {
+      hideScreenShareUI();
     });
 
     function toggleMic() {

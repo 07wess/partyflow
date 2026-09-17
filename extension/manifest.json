@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "PartyFlow - Netflix & Stream Sync",
+  "version": "1.0.0",
+  "description": "PartyFlow sinema odası için Netflix, Disney+ ve Prime Video senkronizasyon eklentisi.",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "*://*.netflix.com/*",
+    "*://*.disneyplus.com/*",
+    "*://*.primevideo.com/*",
+    "http://localhost:5000/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "PartyFlow Sync"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.netflix.com/*",
+        "*://*.disneyplus.com/*",
+        "*://*.primevideo.com/*"
+      ],
+      "js": ["socket.io.min.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
