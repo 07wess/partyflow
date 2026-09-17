@@ -320,11 +320,16 @@
           <span class="hidden sm:inline">Discord Bağla</span>
         </a>
 
-        <!-- Yeni Oda Aç Butonu -->
-        <button onclick="openCreateRoomModal()" class="bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:from-purple-500 hover:to-pink-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xl shadow-purple-600/35 active:scale-95">
-          <span class="text-sm leading-none">+</span>
-          <span>Yeni Oda Aç</span>
-        </button>
+        <!-- Yeni Oda Aç Buton Grubu -->
+        <div class="flex items-center gap-1.5">
+          <button onclick="quickStartRoom()" class="bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:from-purple-500 hover:to-pink-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xl shadow-purple-600/35 active:scale-95" title="Hemen 1 tıkla anında oda aç ve katıl">
+            <span class="text-sm leading-none">+</span>
+            <span>Yeni Oda Aç</span>
+          </button>
+          <button onclick="openCreateRoomModal()" class="bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 px-2.5 py-2.5 rounded-xl text-xs font-bold transition shadow-md active:scale-95" title="Özel ayarlı salon aç (Şifre, yetki vb.)">
+            <span class="text-xs">⚙️</span>
+          </button>
+        </div>
       </div>
     </header>
 
@@ -1031,7 +1036,7 @@
   </div>
 
   <!-- Yeni Oda Oluştur Modal -->
-  <div id="createRoomModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+  <div id="createRoomModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-md z-[99999] flex items-center justify-center p-4">
     <div class="glass-panel bg-surface-card/95 border border-white/15 rounded-3xl w-full max-w-md p-6 sm:p-7 shadow-2xl relative">
       <div class="flex justify-between items-center mb-5">
         <h3 class="text-lg font-black text-white flex items-center gap-2">
@@ -1041,10 +1046,10 @@
         <button onclick="closeCreateRoomModal()" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white flex items-center justify-center transition">✕</button>
       </div>
 
-      <form id="createRoomForm" onsubmit="event.preventDefault(); submitCreateRoom();" class="space-y-4 text-xs">
+      <div id="createRoomForm" class="space-y-4 text-xs">
         <div>
           <label class="block text-zinc-400 mb-1.5 font-bold">Salon Adı</label>
-          <input id="newRoomName" placeholder="Örn: Gece Sineması Kulübü 🎬" class="w-full bg-[#07080c] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-purple-500 font-medium" />
+          <input id="newRoomName" onkeydown="if(event.key==='Enter') submitCreateRoom();" placeholder="Örn: Gece Sineması Kulübü 🎬" class="w-full bg-[#07080c] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-purple-500 font-medium" />
         </div>
 
         <div class="grid grid-cols-2 gap-3">
@@ -1069,20 +1074,20 @@
 
         <div>
           <label class="block text-zinc-400 mb-1.5 font-bold">Oda Şifresi (İsteğe Bağlı)</label>
-          <input id="newRoomPassword" type="password" placeholder="Boş bırakırsanız herkese açık olur" class="w-full bg-[#07080c] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-purple-500 font-medium" />
+          <input id="newRoomPassword" onkeydown="if(event.key==='Enter') submitCreateRoom();" type="password" placeholder="Boş bırakırsanız herkese açık olur" class="w-full bg-[#07080c] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-purple-500 font-medium" />
         </div>
 
         <div>
           <label class="block text-zinc-400 mb-1.5 font-bold">Başlangıç Video Linki (İsteğe Bağlı)</label>
-          <input id="newRoomVideo" placeholder="YouTube, MP4 veya Twitch linki" class="w-full bg-[#07080c] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-purple-500 font-medium" />
+          <input id="newRoomVideo" onkeydown="if(event.key==='Enter') submitCreateRoom();" placeholder="YouTube, MP4 veya Twitch linki" class="w-full bg-[#07080c] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-purple-500 font-medium" />
         </div>
 
         <div class="pt-2">
-          <button type="submit" id="submitCreateRoomBtn" class="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3.5 rounded-2xl transition shadow-xl shadow-purple-600/35 active:scale-95 text-sm">
+          <button type="button" onclick="submitCreateRoom()" id="submitCreateRoomBtn" class="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3.5 rounded-2xl transition shadow-xl shadow-purple-600/35 active:scale-95 text-sm">
             Salonu Başlat ve Katıl 🚀
           </button>
         </div>
-      </form>
+      </div>
     </div>
   </div>
 
@@ -1470,7 +1475,7 @@
             <span class="text-5xl block mb-3 animate-bounce">🍿</span>
             <h3 class="text-base font-bold text-white mb-1">Şu an açık oda bulunmuyor</h3>
             <p class="text-xs text-zinc-400 mb-5">Hemen ilk salonu oluşturun ve arkadaşlarınızı davet edin!</p>
-            <button onclick="openCreateRoomModal()" class="bg-purple-600 hover:bg-purple-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow-lg shadow-purple-600/30">
+            <button onclick="quickStartRoom()" class="bg-purple-600 hover:bg-purple-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow-lg shadow-purple-600/30">
               + Yeni Salon Oluştur
             </button>
           </div>
@@ -1548,28 +1553,32 @@
       const initialVideo = 'https://www.youtube.com/watch?v=jfKfPfyJRdk';
       showToast('🚀 Salonunuz anında başlatılıyor...', 'info', 2000);
 
-      if (!socket || !socket.connected) {
-        showToast('Sunucu bağlantısı bekleniyor, lütfen birkaç saniye bekleyin...', 'warning', 2500);
-        return;
-      }
+      const doCreate = () => {
+        socket.emit('room:create', {
+          roomName,
+          category: 'movie',
+          controlMode: 'all',
+          password: '',
+          initialVideo,
+          username: MY_NAME,
+          avatar: MY_AVATAR
+        }, (res) => {
+          if (res && res.success && res.roomId) {
+            showToast(`"${roomName}" hazır! Salona giriliyor... 🍿`, 'success', 2000);
+            joinRoom(res.roomId, false, null);
+          } else {
+            showToast((res && res.error) || 'Hemen başlatılamadı, ayar penceresi açılıyor...', 'error', 2500);
+            openCreateRoomModal();
+          }
+        });
+      };
 
-      socket.emit('room:create', {
-        roomName,
-        category: 'movie',
-        controlMode: 'all',
-        password: '',
-        initialVideo,
-        username: MY_NAME,
-        avatar: MY_AVATAR
-      }, (res) => {
-        if (res && res.success && res.roomId) {
-          showToast(`"${roomName}" hazır! Salona giriliyor... 🍿`, 'success', 2000);
-          joinRoom(res.roomId, false, null);
-        } else {
-          showToast((res && res.error) || 'Hemen başlatılamadı, ayar penceresi açılıyor...', 'error', 2500);
-          openCreateRoomModal();
-        }
-      });
+      if (!socket.connected) {
+        showToast('Sunucuya bağlanılıyor, lütfen 1 saniye bekleyin...', 'info', 1500);
+        socket.once('connect', doCreate);
+      } else {
+        doCreate();
+      }
     }
 
     function openCreateRoomModal(prefilledName = null) {
@@ -1599,42 +1608,34 @@
       const password = (document.getElementById('newRoomPassword') && document.getElementById('newRoomPassword').value.trim()) || '';
       const initialVideo = (document.getElementById('newRoomVideo') && document.getElementById('newRoomVideo').value.trim()) || 'https://www.youtube.com/watch?v=jfKfPfyJRdk';
 
-      const btn = document.getElementById('submitCreateRoomBtn');
-      if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<span>⏳ Salon Başlatılıyor...</span>';
-      }
+      closeCreateRoomModal();
+      showToast(`"${roomName}" salonu hazırlanıyor... 🚀`, 'info', 2000);
 
-      if (!socket || !socket.connected) {
-        if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = 'Salonu Başlat ve Katıl 🚀';
-        }
-        showToast('Sunucuya bağlanılamadı. Lütfen sayfayı yenileyin.', 'error');
-        return;
-      }
+      const doSubmit = () => {
+        socket.emit('room:create', {
+          roomName,
+          category,
+          controlMode,
+          password,
+          initialVideo,
+          username: MY_NAME,
+          avatar: MY_AVATAR
+        }, (res) => {
+          if (res && res.success && res.roomId) {
+            showToast(`"${roomName}" salonu başarıyla açıldı! 🍿`, 'success', 2000);
+            joinRoom(res.roomId, false, password || null);
+          } else {
+            showToast((res && res.error) || 'Salon açılamadı.', 'error', 3000);
+          }
+        });
+      };
 
-      socket.emit('room:create', {
-        roomName,
-        category,
-        controlMode,
-        password,
-        initialVideo,
-        username: MY_NAME,
-        avatar: MY_AVATAR
-      }, (res) => {
-        if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = 'Salonu Başlat ve Katıl 🚀';
-        }
-        if (res && res.success) {
-          closeCreateRoomModal();
-          showToast(`"${roomName}" salonu başarıyla açıldı! 🚀`, 'success');
-          joinRoom(res.roomId, false, password || null);
-        } else {
-          showToast((res && res.error) || 'Salon açılamadı.', 'error');
-        }
-      });
+      if (!socket.connected) {
+        showToast('Sunucuya bağlanılıyor...', 'info', 1500);
+        socket.once('connect', doSubmit);
+      } else {
+        doSubmit();
+      }
     }
 
     function joinRoom(roomId, hasPassword = false, password = null) {
@@ -1644,27 +1645,31 @@
         return;
       }
 
-      if (!socket || !socket.connected) {
-        showToast('Sunucuya bağlanılamadı. Lütfen sayfayı yenileyin.', 'error');
-        return;
-      }
+      const doJoin = () => {
+        socket.emit('room:join', {
+          roomId,
+          username: MY_NAME,
+          avatar: MY_AVATAR,
+          peerId: myPeerId,
+          password: password || null
+        }, (res) => {
+          if (res && res.success) {
+            currentRoomId = roomId;
+            currentRoomData = res.room;
+            switchToCinemaView(res.room);
+            showToast(`"${res.room.name}" salonuna katıldınız! 🍿`, 'success');
+          } else {
+            showToast((res && res.error) || 'Salona katılınamadı!', 'error');
+          }
+        });
+      };
 
-      socket.emit('room:join', {
-        roomId,
-        username: MY_NAME,
-        avatar: MY_AVATAR,
-        peerId: myPeerId,
-        password: password || null
-      }, (res) => {
-        if (res && res.success) {
-          currentRoomId = roomId;
-          currentRoomData = res.room;
-          switchToCinemaView(res.room);
-          showToast(`"${res.room.name}" salonuna katıldınız! 🍿`, 'success');
-        } else {
-          showToast((res && res.error) || 'Salona katılınamadı!', 'error');
-        }
-      });
+      if (!socket.connected) {
+        showToast('Salona bağlanılıyor...', 'info', 1500);
+        socket.once('connect', doJoin);
+      } else {
+        doJoin();
+      }
     }
 
     function closePasswordModal() {
