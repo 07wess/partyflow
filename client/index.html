@@ -43,6 +43,25 @@
     }
   </script>
 
+  <!-- Erken Modal Yardımcı Fonksiyonları (Sayfa yüklenirken bile anında çalışması için) -->
+  <script>
+    window.openCreateRoomModal = function(prefilledName) {
+      const modal = document.getElementById('createRoomModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.style.setProperty('display', 'flex', 'important');
+        modal.style.setProperty('z-index', '999999', 'important');
+      }
+    };
+    window.closeCreateRoomModal = function() {
+      const modal = document.getElementById('createRoomModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.style.setProperty('display', 'none', 'important');
+      }
+    };
+  </script>
+
   <!-- Socket.io -->
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <!-- PeerJS WebRTC -->
@@ -250,9 +269,9 @@
 <body class="bg-[#07080c] text-zinc-100 h-screen w-screen flex flex-col overflow-hidden font-sans select-none antialiased">
 
   <!-- ======================================================== -->
-  <!-- TOAST BİLDİRİM DOKU                                      -->
+  <!-- TOAST BİLDİRİM DOKU (Sağ altta konumlandırılarak üst butonları kapatması önlendi) -->
   <!-- ======================================================== -->
-  <div id="toastContainer" class="fixed top-5 right-5 z-[99999] flex flex-col gap-2.5 pointer-events-none max-w-sm w-full"></div>
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-[99999] flex flex-col gap-2.5 pointer-events-none max-w-sm w-full"></div>
 
   <!-- ======================================================== -->
   <!-- HIZLI ARAMA & KOMUT PALETİ (Ctrl+K)                      -->
@@ -321,14 +340,14 @@
         </a>
 
         <!-- Yeni Oda Aç & Özel Ayarlı Salon Buton Grubu -->
-        <div class="flex items-center gap-2">
-          <button onclick="quickStartRoom()" class="bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:from-purple-500 hover:to-pink-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xl shadow-purple-600/35 active:scale-95" title="Hemen 1 tıkla anında oda aç ve katıl">
-            <span class="text-sm leading-none">+</span>
-            <span>Yeni Oda Aç</span>
+        <div class="flex items-center gap-2 relative z-30">
+          <button type="button" id="btnHeaderQuickStart" onclick="quickStartRoom()" class="cursor-pointer bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:from-purple-500 hover:to-pink-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xl shadow-purple-600/35 active:scale-95" title="Hemen 1 tıkla anında oda aç ve katıl">
+            <span class="text-sm leading-none pointer-events-none">+</span>
+            <span class="pointer-events-none">Yeni Oda Aç</span>
           </button>
-          <button onclick="openCreateRoomModal()" class="bg-surface-card hover:bg-white/10 text-zinc-200 hover:text-purple-300 border border-white/15 hover:border-purple-500/40 px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md active:scale-95" title="Şifreli veya özel ayarlı salon kur">
-            <span>⚙️</span>
-            <span class="hidden sm:inline">Özel Ayarlı Salon</span>
+          <button type="button" id="btnHeaderCustomRoom" onclick="openCreateRoomModal()" class="cursor-pointer relative z-30 bg-surface-card hover:bg-white/10 text-zinc-200 hover:text-purple-300 border border-white/15 hover:border-purple-500/40 px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md active:scale-95" title="Şifreli veya özel ayarlı salon kur">
+            <span class="pointer-events-none">⚙️</span>
+            <span class="pointer-events-none hidden sm:inline">Özel Ayarlı Salon</span>
           </button>
         </div>
       </div>
@@ -355,17 +374,17 @@
           </div>
 
           <div class="relative z-10 mt-8 flex flex-wrap gap-3.5">
-            <button onclick="quickStartRoom()" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-6 py-3.5 rounded-2xl text-xs sm:text-sm font-bold transition shadow-xl shadow-purple-600/35 flex items-center gap-2 active:scale-95">
-              <span>🚀</span>
-              <span>Hemen Bir Salon Başlat</span>
+            <button type="button" id="btnHeroQuickStart" onclick="quickStartRoom()" class="cursor-pointer bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-6 py-3.5 rounded-2xl text-xs sm:text-sm font-bold transition shadow-xl shadow-purple-600/35 flex items-center gap-2 active:scale-95">
+              <span class="pointer-events-none">🚀</span>
+              <span class="pointer-events-none">Hemen Bir Salon Başlat</span>
             </button>
-            <button onclick="openCreateRoomModal()" class="bg-white/10 hover:bg-white/15 text-white border border-white/20 hover:border-purple-500/50 px-5 py-3.5 rounded-2xl text-xs sm:text-sm font-bold transition shadow-lg flex items-center gap-2 active:scale-95" title="Şifre, kategori veya özel video ile salon kur">
-              <span>⚙️</span>
-              <span>Özel Ayarlı Salon Kur</span>
+            <button type="button" id="btnHeroCustomRoom" onclick="openCreateRoomModal()" class="cursor-pointer bg-white/10 hover:bg-white/15 text-white border border-white/20 hover:border-purple-500/50 px-5 py-3.5 rounded-2xl text-xs sm:text-sm font-bold transition shadow-lg flex items-center gap-2 active:scale-95" title="Şifre, kategori veya özel video ile salon kur">
+              <span class="pointer-events-none">⚙️</span>
+              <span class="pointer-events-none">Özel Ayarlı Salon Kur</span>
             </button>
-            <button onclick="quickJoinPreset('sinema-salonu')" class="bg-white/5 hover:bg-white/10 text-zinc-200 border border-white/10 hover:border-purple-500/40 px-6 py-3.5 rounded-2xl text-xs sm:text-sm font-semibold transition shadow-lg flex items-center gap-2 active:scale-95">
-              <span>🍿</span>
-              <span>Genel Sinema Kulübüne Gir</span>
+            <button type="button" onclick="quickJoinPreset('sinema-salonu')" class="cursor-pointer bg-white/5 hover:bg-white/10 text-zinc-200 border border-white/10 hover:border-purple-500/40 px-6 py-3.5 rounded-2xl text-xs sm:text-sm font-semibold transition shadow-lg flex items-center gap-2 active:scale-95">
+              <span class="pointer-events-none">🍿</span>
+              <span class="pointer-events-none">Genel Sinema Kulübüne Gir</span>
             </button>
           </div>
         </div>
@@ -1048,7 +1067,7 @@
           <span>🍿</span>
           <span>Özel Ayarlı Sinema Salonu Aç</span>
         </h3>
-        <button onclick="closeCreateRoomModal()" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white flex items-center justify-center transition">✕</button>
+        <button type="button" onclick="closeCreateRoomModal()" class="cursor-pointer w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white flex items-center justify-center transition">✕</button>
       </div>
 
       <div id="createRoomForm" class="space-y-4 text-xs">
@@ -1060,7 +1079,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-zinc-400 mb-1.5 font-bold">Kategori</label>
-            <select id="newRoomCategory" class="w-full bg-[#07080c] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-purple-500 font-medium">
+            <select id="newRoomCategory" class="cursor-pointer w-full bg-[#07080c] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-purple-500 font-medium">
               <option value="movie">🎬 Film & Dizi</option>
               <option value="music">🎵 Müzik & Lofi</option>
               <option value="anime">⛩️ Anime</option>
@@ -1070,7 +1089,7 @@
           </div>
           <div>
             <label class="block text-zinc-400 mb-1.5 font-bold">Kontrol Yetkisi</label>
-            <select id="newRoomControlMode" class="w-full bg-[#07080c] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-purple-500 font-medium">
+            <select id="newRoomControlMode" class="cursor-pointer w-full bg-[#07080c] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-purple-500 font-medium">
               <option value="all">🤝 Herkes Kontrol Etsin</option>
               <option value="host">👑 Sadece Ben (Host)</option>
             </select>
@@ -1088,7 +1107,7 @@
         </div>
 
         <div class="pt-2">
-          <button type="button" onclick="submitCreateRoom()" id="submitCreateRoomBtn" class="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3.5 rounded-2xl transition shadow-xl shadow-purple-600/35 active:scale-95 text-sm">
+          <button type="button" onclick="submitCreateRoom()" id="submitCreateRoomBtn" class="cursor-pointer w-full bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3.5 rounded-2xl transition shadow-xl shadow-purple-600/35 active:scale-95 text-sm">
             Salonu Başlat ve Katıl 🚀
           </button>
         </div>
@@ -1106,8 +1125,8 @@
       <input id="roomPasswordInput" type="password" placeholder="Oda şifresi..." class="w-full bg-[#07080c] border border-white/10 rounded-xl p-3 text-white text-center outline-none focus:border-purple-500 text-xs mb-4 font-medium" />
       
       <div class="flex gap-2.5">
-        <button onclick="closePasswordModal()" class="flex-1 bg-white/5 hover:bg-white/10 py-3 rounded-xl text-xs text-zinc-300 font-semibold transition active:scale-95">İptal</button>
-        <button onclick="submitPasswordJoin()" class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 py-3 rounded-xl text-xs text-white font-bold transition shadow-lg shadow-purple-600/30 active:scale-95">Giriş Yap</button>
+        <button type="button" onclick="closePasswordModal()" class="cursor-pointer flex-1 bg-white/5 hover:bg-white/10 py-3 rounded-xl text-xs text-zinc-300 font-semibold transition active:scale-95">İptal</button>
+        <button type="button" onclick="submitPasswordJoin()" class="cursor-pointer flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 py-3 rounded-xl text-xs text-white font-bold transition shadow-lg shadow-purple-600/30 active:scale-95">Giriş Yap</button>
       </div>
     </div>
   </div>
@@ -1120,13 +1139,13 @@
           <span>👑</span>
           <span>Oda Sahibi Ayarları</span>
         </h3>
-        <button onclick="closeHostSettingsModal()" class="text-zinc-500 hover:text-white text-sm">✕</button>
+        <button type="button" onclick="closeHostSettingsModal()" class="cursor-pointer text-zinc-500 hover:text-white text-sm">✕</button>
       </div>
 
       <div class="space-y-3.5 text-xs">
         <div>
           <label class="block text-zinc-400 mb-1.5 font-bold">Video Oynatma Yetkisi</label>
-          <select id="editControlMode" class="w-full bg-[#07080c] border border-white/10 rounded-xl p-2.5 text-white outline-none font-medium">
+          <select id="editControlMode" class="cursor-pointer w-full bg-[#07080c] border border-white/10 rounded-xl p-2.5 text-white outline-none font-medium">
             <option value="all">🤝 Herkes Kontrol Edebilsin</option>
             <option value="host">👑 Sadece Ben (Host) Kontrol Edeyim</option>
           </select>
@@ -1138,7 +1157,7 @@
         </div>
 
         <div class="pt-2">
-          <button onclick="saveHostSettings()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-purple-600/30 active:scale-95">
+          <button type="button" onclick="saveHostSettings()" class="cursor-pointer w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-purple-600/30 active:scale-95">
             Ayarları Kaydet
           </button>
         </div>
@@ -1587,15 +1606,21 @@
     }
 
     function openCreateRoomModal(prefilledName = null) {
+      console.log('[UI] openCreateRoomModal triggered');
       const modal = document.getElementById('createRoomModal');
-      if (!modal) return;
+      if (!modal) {
+        console.error('[UI] createRoomModal element not found!');
+        return;
+      }
       const input = document.getElementById('newRoomName');
       if (input) {
         input.value = prefilledName || `${MY_NAME}'in Sinema Salonu 🍿`;
       }
       modal.classList.remove('hidden');
-      modal.style.display = 'flex';
-      modal.style.zIndex = '999999';
+      modal.style.setProperty('display', 'flex', 'important');
+      modal.style.setProperty('z-index', '999999', 'important');
+      modal.style.setProperty('opacity', '1', 'important');
+      modal.style.setProperty('pointer-events', 'auto', 'important');
       if (input) {
         setTimeout(() => {
           input.focus();
@@ -1603,13 +1628,15 @@
         }, 50);
       }
     }
+    window.openCreateRoomModal = openCreateRoomModal;
 
     function closeCreateRoomModal() {
       const modal = document.getElementById('createRoomModal');
       if (!modal) return;
       modal.classList.add('hidden');
-      modal.style.display = 'none';
+      modal.style.setProperty('display', 'none', 'important');
     }
+    window.closeCreateRoomModal = closeCreateRoomModal;
 
     function submitCreateRoom() {
       const nameInput = document.getElementById('newRoomName');
@@ -2390,7 +2417,20 @@
       setTimeout(() => el.remove(), 2300);
     }
 
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let audioCtx = null;
+    function getAudioContext() {
+      if (!audioCtx) {
+        try {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+          }
+        } catch (e) {
+          console.warn('[Audio] AudioContext init prevented:', e);
+        }
+      }
+      return audioCtx;
+    }
 
     function playSFX(type) {
       socket.emit('sfx:trigger', { roomId: currentRoomId, sound: type });
@@ -2402,11 +2442,15 @@
     });
 
     function playLocalAudioEffect(type) {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+      }
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
       osc.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(ctx.destination);
 
       if (type === 'horn') {
         osc.type = 'sawtooth';
@@ -3433,15 +3477,20 @@
       const modal = document.getElementById('hostSettingsModal');
       if (!modal) return;
       modal.classList.remove('hidden');
-      modal.style.display = 'flex';
-      modal.style.zIndex = '999999';
+      modal.style.setProperty('display', 'flex', 'important');
+      modal.style.setProperty('z-index', '999999', 'important');
+      modal.style.setProperty('opacity', '1', 'important');
+      modal.style.setProperty('pointer-events', 'auto', 'important');
     }
+    window.openHostSettingsModal = openHostSettingsModal;
+
     function closeHostSettingsModal() {
       const modal = document.getElementById('hostSettingsModal');
       if (!modal) return;
       modal.classList.add('hidden');
-      modal.style.display = 'none';
+      modal.style.setProperty('display', 'none', 'important');
     }
+    window.closeHostSettingsModal = closeHostSettingsModal;
 
     function saveHostSettings() {
       const controlMode = document.getElementById('editControlMode').value;
@@ -3458,6 +3507,33 @@
     function escapeHtml(str) {
       if (!str) return '';
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // ========================================================
+    // L. GARANTİLİ TIKLAMA OLAY DİNLEYİCİLERİ (FALLBACK LISTENERS)
+    // ========================================================
+    function bindActionListeners() {
+      const attach = (id, handler) => {
+        const el = document.getElementById(id);
+        if (el && !el._hasCustomClickListener) {
+          el._hasCustomClickListener = true;
+          el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            handler();
+          });
+        }
+      };
+
+      attach('btnHeaderCustomRoom', () => openCreateRoomModal());
+      attach('btnHeroCustomRoom', () => openCreateRoomModal());
+      attach('btnHeaderQuickStart', () => quickStartRoom());
+      attach('btnHeroQuickStart', () => quickStartRoom());
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', bindActionListeners);
+    } else {
+      bindActionListeners();
     }
   </script>
 </body>
