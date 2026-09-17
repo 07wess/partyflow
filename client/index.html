@@ -312,6 +312,14 @@
             </button>
           </div>
 
+          <!-- Tam Ekranda Üst Ortada Beliren Hızlı Çıkış Butonu -->
+          <div id="fullscreenTopExitBtn" class="hidden absolute top-4 left-1/2 -translate-x-1/2 z-40">
+            <button onclick="toggleFullScreen()" class="bg-red-600/90 hover:bg-red-500 text-white font-bold text-xs px-4 py-2 rounded-2xl shadow-2xl flex items-center gap-1.5 transition transform hover:scale-105 border border-red-400/50 backdrop-blur-md" title="Tam Ekrandan Çık (Kısayol: ESC veya F)">
+              <span class="text-sm font-bold">✕</span>
+              <span>Tam Ekrandan Çık (Küçült)</span>
+            </button>
+          </div>
+
           <!-- Uçuşan Reaksiyon Emojileri Katmanı -->
           <div id="reactionsLayer" class="absolute inset-0 pointer-events-none overflow-hidden z-30"></div>
 
@@ -925,6 +933,7 @@
           playerVars: {
             autoplay: 1,
             controls: 1,
+            fs: 0, // YouTube'un bozuk dahili tam ekran tuşunu gizle (PartyFlow kontrolleri kullanılsın)
             modestbranding: 1,
             rel: 0,
             enablejsapi: 1,
@@ -945,7 +954,7 @@
         });
       } catch (err) {
         console.error('[YouTube] Player hatası, iframe fallback:', err);
-        wrapper.innerHTML = `<iframe id="youtubeFallbackIframe" class="w-full h-full border-0" src="https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1&origin=${window.location.origin}&rel=0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+        wrapper.innerHTML = `<iframe id="youtubeFallbackIframe" class="w-full h-full border-0" src="https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1&fs=0&origin=${window.location.origin}&rel=0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>`;
       }
     }
 
@@ -1314,9 +1323,19 @@
     // ========================================================
     // 6.5. TAM EKRAN VE GENİŞ EKRAN (THEATER) KONTROLLERİ
     // ========================================================
+    function isCurrentlyFullscreen() {
+      return !!(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement ||
+        (window.innerHeight >= screen.height - 15 && window.innerWidth >= screen.width - 15)
+      );
+    }
+
     function toggleFullScreen() {
       const el = document.getElementById('videoContainer');
-      const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+      const isFs = isCurrentlyFullscreen();
       if (!isFs) {
         if (el.requestFullscreen) {
           el.requestFullscreen().catch(err => console.warn('Tam ekran hatası:', err));
@@ -1349,21 +1368,23 @@
     }
 
     function handleFullscreenChange() {
-      const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+      const isFs = isCurrentlyFullscreen();
       const fsBtn = document.getElementById('fullscreenBtn');
       const fsOverlayBtn = document.getElementById('fsOverlayBtn');
       const fsOverlayIcon = document.getElementById('fsOverlayIcon');
       const fsOverlayText = document.getElementById('fsOverlayText');
+      const fullscreenTopExitBtn = document.getElementById('fullscreenTopExitBtn');
       const videoContainer = document.getElementById('videoContainer');
 
       if (isFs) {
-        if (fsBtn) fsBtn.innerHTML = '<span class="text-sm font-bold">⛶</span><span class="hidden sm:inline font-bold">Küçült</span>';
+        if (fsBtn) fsBtn.innerHTML = '<span class="text-sm font-bold">✕</span><span class="hidden sm:inline font-bold">Küçült</span>';
         if (fsOverlayIcon) fsOverlayIcon.textContent = '✕';
         if (fsOverlayText) fsOverlayText.textContent = 'Küçült';
         if (fsOverlayBtn) {
           fsOverlayBtn.classList.add('bg-red-600/90', 'hover:bg-red-600', 'border-red-400/80');
           fsOverlayBtn.classList.remove('bg-black/75');
         }
+        if (fullscreenTopExitBtn) fullscreenTopExitBtn.classList.remove('hidden');
         videoContainer.classList.add('is-fullscreen');
       } else {
         if (fsBtn) fsBtn.innerHTML = '<span class="text-sm font-bold">⛶</span><span class="hidden sm:inline font-bold">Tam Ekran</span>';
@@ -1373,6 +1394,7 @@
           fsOverlayBtn.classList.remove('bg-red-600/90', 'hover:bg-red-600', 'border-red-400/80');
           fsOverlayBtn.classList.add('bg-black/75');
         }
+        if (fullscreenTopExitBtn) fullscreenTopExitBtn.classList.add('hidden');
         videoContainer.classList.remove('is-fullscreen');
         videoContainer.classList.remove('hide-cursor');
       }
@@ -1380,6 +1402,9 @@
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+    window.addEventListener('resize', handleFullscreenChange);
 
     // Altyazı (CC) Kontrolü
     function toggleCaptions() {
