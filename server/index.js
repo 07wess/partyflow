@@ -657,13 +657,90 @@ io.on('connection', (socket) => {
     });
   });
 
-  // Anlık Tepki Efektleri (❤️, 😂, 😭, 😡)
+  // Anlık Tepki Efektleri (❤️, 😂, 😭, 😡) & Hype Arttırma
   socket.on('reaction:trigger', ({ roomId, type, sender }) => {
     io.to(roomId).emit('reaction:broadcast', {
       id: Math.random().toString(36).substring(2, 9),
       type,
       sender: sender || socket.username
     });
+
+    const room = rooms[roomId];
+    if (room) {
+      room.hypeScore = (room.hypeScore || 0) + 4;
+      if (room.hypeScore >= 100) {
+        room.hypeScore = 0;
+        io.to(roomId).emit('hype:fever', { triggerBy: sender || socket.username });
+      }
+      io.to(roomId).emit('hype:updated', { hypeScore: room.hypeScore });
+    }
+  });
+
+  // Hype Meter Doğrudan Arttırma
+  socket.on('hype:boost', ({ roomId, amount }) => {
+    const room = rooms[roomId];
+    if (!room) return;
+    room.hypeScore = (room.hypeScore || 0) + (amount || 6);
+    if (room.hypeScore >= 100) {
+      room.hypeScore = 0;
+      io.to(roomId).emit('hype:fever', { triggerBy: socket.username || 'Salon' });
+    }
+    io.to(roomId).emit('hype:updated', { hypeScore: room.hypeScore });
+  });
+
+  // Gerçek Zamanlı Ping / Latency Kontrolü
+  socket.on('ping:check', (data, callback) => {
+    if (callback) callback({ serverTime: Date.now() });
+  });
+
+  // Canlı Oda Anketi (Live Room Poll)
+  socket.on('poll:start', ({ roomId, question, options }) => {
+    const room = rooms[roomId];
+    if (!room) return;
+    room.activePoll = {
+      id: Date.now(),
+      question,
+      options: (options || []).map(opt => ({ text: opt, votes: 0 })),
+      votesByUser: {},
+      creator: socket.username || 'Üye',
+      createdAt: Date.now()
+    };
+    io.to(roomId).emit('poll:started', room.activePoll);
+    io.to(roomId).emit('chat:receive', {
+      id: Date.now(),
+      sender: 'PartyFlow AI',
+      avatar: 'https://cdn-icons-png.flaticon.com/512/3658/3658773.png',
+      message: `📊 Canlı Oylama Başlatıldı: "${question}"`,
+      isSystem: true,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    });
+  });
+
+  socket.on('poll:vote', ({ roomId, optionIndex }) => {
+    const room = rooms[roomId];
+    if (!room || !room.activePoll) return;
+    const poll = room.activePoll;
+    const prevVote = poll.votesByUser[socket.id];
+    if (prevVote !== undefined && poll.options[prevVote]) {
+      poll.options[prevVote].votes = Math.max(0, poll.options[prevVote].votes - 1);
+    }
+    poll.votesByUser[socket.id] = optionIndex;
+    if (poll.options[optionIndex]) {
+      poll.options[optionIndex].votes += 1;
+    }
+    const totalVotes = Object.keys(poll.votesByUser).length;
+    io.to(roomId).emit('poll:updated', {
+      options: poll.options,
+      totalVotes,
+      voterId: socket.id
+    });
+  });
+
+  socket.on('poll:end', ({ roomId }) => {
+    const room = rooms[roomId];
+    if (!room || !room.activePoll) return;
+    io.to(roomId).emit('poll:ended');
+    room.activePoll = null;
   });
 
   // Kullanıcı Ayrıldığında
