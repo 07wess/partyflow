@@ -320,14 +320,15 @@
           <span class="hidden sm:inline">Discord Bağla</span>
         </a>
 
-        <!-- Yeni Oda Aç Buton Grubu -->
-        <div class="flex items-center gap-1.5">
+        <!-- Yeni Oda Aç & Özel Ayarlı Salon Buton Grubu -->
+        <div class="flex items-center gap-2">
           <button onclick="quickStartRoom()" class="bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:from-purple-500 hover:to-pink-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xl shadow-purple-600/35 active:scale-95" title="Hemen 1 tıkla anında oda aç ve katıl">
             <span class="text-sm leading-none">+</span>
             <span>Yeni Oda Aç</span>
           </button>
-          <button onclick="openCreateRoomModal()" class="bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 px-2.5 py-2.5 rounded-xl text-xs font-bold transition shadow-md active:scale-95" title="Özel ayarlı salon aç (Şifre, yetki vb.)">
-            <span class="text-xs">⚙️</span>
+          <button onclick="openCreateRoomModal()" class="bg-surface-card hover:bg-white/10 text-zinc-200 hover:text-purple-300 border border-white/15 hover:border-purple-500/40 px-3 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md active:scale-95" title="Şifreli veya özel ayarlı salon kur">
+            <span>⚙️</span>
+            <span class="hidden sm:inline">Özel Ayarlı Salon</span>
           </button>
         </div>
       </div>
@@ -357,6 +358,10 @@
             <button onclick="quickStartRoom()" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-6 py-3.5 rounded-2xl text-xs sm:text-sm font-bold transition shadow-xl shadow-purple-600/35 flex items-center gap-2 active:scale-95">
               <span>🚀</span>
               <span>Hemen Bir Salon Başlat</span>
+            </button>
+            <button onclick="openCreateRoomModal()" class="bg-white/10 hover:bg-white/15 text-white border border-white/20 hover:border-purple-500/50 px-5 py-3.5 rounded-2xl text-xs sm:text-sm font-bold transition shadow-lg flex items-center gap-2 active:scale-95" title="Şifre, kategori veya özel video ile salon kur">
+              <span>⚙️</span>
+              <span>Özel Ayarlı Salon Kur</span>
             </button>
             <button onclick="quickJoinPreset('sinema-salonu')" class="bg-white/5 hover:bg-white/10 text-zinc-200 border border-white/10 hover:border-purple-500/40 px-6 py-3.5 rounded-2xl text-xs sm:text-sm font-semibold transition shadow-lg flex items-center gap-2 active:scale-95">
               <span>🍿</span>
@@ -1036,12 +1041,12 @@
   </div>
 
   <!-- Yeni Oda Oluştur Modal -->
-  <div id="createRoomModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-md z-[99999] flex items-center justify-center p-4">
-    <div class="glass-panel bg-surface-card/95 border border-white/15 rounded-3xl w-full max-w-md p-6 sm:p-7 shadow-2xl relative">
+  <div id="createRoomModal" onclick="if(event.target === this) closeCreateRoomModal();" style="display: none; z-index: 999999;" class="hidden fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div onclick="event.stopPropagation();" class="glass-panel bg-surface-card/95 border border-white/15 rounded-3xl w-full max-w-md p-6 sm:p-7 shadow-2xl relative">
       <div class="flex justify-between items-center mb-5">
         <h3 class="text-lg font-black text-white flex items-center gap-2">
           <span>🍿</span>
-          <span>Yeni Sinema Salonu Aç</span>
+          <span>Özel Ayarlı Sinema Salonu Aç</span>
         </h3>
         <button onclick="closeCreateRoomModal()" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white flex items-center justify-center transition">✕</button>
       </div>
@@ -1108,8 +1113,8 @@
   </div>
 
   <!-- Host Ayarları Modalı -->
-  <div id="hostSettingsModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
-    <div class="glass-panel bg-surface-card/95 border border-white/15 rounded-3xl w-full max-w-sm p-6 shadow-2xl relative">
+  <div id="hostSettingsModal" onclick="if(event.target === this) closeHostSettingsModal();" style="display: none; z-index: 999999;" class="hidden fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div onclick="event.stopPropagation();" class="glass-panel bg-surface-card/95 border border-white/15 rounded-3xl w-full max-w-sm p-6 shadow-2xl relative">
       <div class="flex justify-between items-center mb-4">
         <h3 class="text-base font-black text-white flex items-center gap-2">
           <span>👑</span>
@@ -1583,11 +1588,14 @@
 
     function openCreateRoomModal(prefilledName = null) {
       const modal = document.getElementById('createRoomModal');
+      if (!modal) return;
       const input = document.getElementById('newRoomName');
       if (input) {
         input.value = prefilledName || `${MY_NAME}'in Sinema Salonu 🍿`;
       }
       modal.classList.remove('hidden');
+      modal.style.display = 'flex';
+      modal.style.zIndex = '999999';
       if (input) {
         setTimeout(() => {
           input.focus();
@@ -1597,7 +1605,10 @@
     }
 
     function closeCreateRoomModal() {
-      document.getElementById('createRoomModal').classList.add('hidden');
+      const modal = document.getElementById('createRoomModal');
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
     }
 
     function submitCreateRoom() {
@@ -3419,10 +3430,17 @@
     }
 
     function openHostSettingsModal() {
-      document.getElementById('hostSettingsModal').classList.remove('hidden');
+      const modal = document.getElementById('hostSettingsModal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex';
+      modal.style.zIndex = '999999';
     }
     function closeHostSettingsModal() {
-      document.getElementById('hostSettingsModal').classList.add('hidden');
+      const modal = document.getElementById('hostSettingsModal');
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
     }
 
     function saveHostSettings() {
