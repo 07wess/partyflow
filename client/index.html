@@ -1041,7 +1041,7 @@
         <button onclick="closeCreateRoomModal()" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white flex items-center justify-center transition">✕</button>
       </div>
 
-      <div class="space-y-4 text-xs">
+      <form id="createRoomForm" onsubmit="event.preventDefault(); submitCreateRoom();" class="space-y-4 text-xs">
         <div>
           <label class="block text-zinc-400 mb-1.5 font-bold">Salon Adı</label>
           <input id="newRoomName" placeholder="Örn: Gece Sineması Kulübü 🎬" class="w-full bg-[#07080c] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-purple-500 font-medium" />
@@ -1078,11 +1078,11 @@
         </div>
 
         <div class="pt-2">
-          <button onclick="submitCreateRoom()" class="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3.5 rounded-2xl transition shadow-xl shadow-purple-600/35 active:scale-95 text-sm">
+          <button type="submit" id="submitCreateRoomBtn" class="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3.5 rounded-2xl transition shadow-xl shadow-purple-600/35 active:scale-95 text-sm">
             Salonu Başlat ve Katıl 🚀
           </button>
         </div>
-      </div>
+      </form>
     </div>
   </div>
 
@@ -1189,7 +1189,15 @@
     let currentRoomId = null;
     let currentRoomData = null;
     let pendingJoinRoomId = null;
-    let allPublicRooms = [];
+    const defaultPresetRooms = [
+      { id: 'sinema-salonu', name: '🍿 Gece Sineması Kulübü', category: 'movie', hasPassword: false, userCount: 0, isPlaying: true, hostName: 'Sistem' },
+      { id: 'lofi-cafe', name: '☕ Lofi & Sohbet Lounge', category: 'music', hasPassword: false, userCount: 0, isPlaying: true, hostName: 'Sistem' },
+      { id: 'anime-salonu', name: '⛩️ Anime & Dizi Salonu', category: 'anime', hasPassword: false, userCount: 0, isPlaying: true, hostName: 'Sistem' },
+      { id: 'espor-arenasi', name: '🎮 Oyun & Espor Arenası', category: 'gaming', hasPassword: false, userCount: 0, isPlaying: true, hostName: 'Sistem' },
+      { id: 'scifi-4k', name: '🚀 Bilim Kurgu & 4K Sinema', category: 'movie', hasPassword: false, userCount: 0, isPlaying: true, hostName: 'Sistem' },
+      { id: 'komedi-kulubu', name: '🎬 Popüler Trendler & Komedi', category: 'general', hasPassword: false, userCount: 0, isPlaying: true, hostName: 'Sistem' }
+    ];
+    let allPublicRooms = [...defaultPresetRooms];
     let isAutoplayEnabled = true;
     let currentHypeScore = 0;
     let currentActivePoll = null;
@@ -1237,8 +1245,12 @@
     });
 
     socket.on('lobby:rooms_updated', (rooms) => {
-      allPublicRooms = rooms;
-      renderRoomsGrid(rooms);
+      if (Array.isArray(rooms) && rooms.length > 0) {
+        allPublicRooms = rooms;
+      } else {
+        allPublicRooms = [...defaultPresetRooms];
+      }
+      renderRoomsGrid(allPublicRooms);
     });
 
     function startRadarPing() {
@@ -1557,6 +1569,9 @@
       });
     }
 
+    // Hemen başlangıçta hazır odaları lobiye yerleştir
+    renderRoomsGrid(allPublicRooms);
+
     function filterRooms() {
       const q = document.getElementById('roomSearchInput').value.toLowerCase().trim();
       const filtered = allPublicRooms.filter(r => r.name.toLowerCase().includes(q) || (r.category && r.category.toLowerCase().includes(q)));
@@ -1567,19 +1582,38 @@
       joinRoom(roomId, false);
     }
 
-    function openCreateRoomModal() {
-      document.getElementById('createRoomModal').classList.remove('hidden');
+    function openCreateRoomModal(prefilledName = null) {
+      const modal = document.getElementById('createRoomModal');
+      const input = document.getElementById('newRoomName');
+      if (input) {
+        input.value = prefilledName || `${MY_NAME}'in Sinema Salonu 🍿`;
+      }
+      modal.classList.remove('hidden');
+      if (input) {
+        setTimeout(() => {
+          input.focus();
+          input.select();
+        }, 50);
+      }
     }
+
     function closeCreateRoomModal() {
       document.getElementById('createRoomModal').classList.add('hidden');
     }
 
     function submitCreateRoom() {
-      const roomName = document.getElementById('newRoomName').value.trim() || 'Yeni Sinema Salonu';
+      const nameInput = document.getElementById('newRoomName');
+      const roomName = (nameInput && nameInput.value.trim()) || `${MY_NAME}'in Sinema Salonu 🍿`;
       const category = document.getElementById('newRoomCategory').value;
       const controlMode = document.getElementById('newRoomControlMode').value;
       const password = document.getElementById('newRoomPassword').value;
       const initialVideo = document.getElementById('newRoomVideo').value.trim();
+
+      const btn = document.getElementById('submitCreateRoomBtn');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳ Salon Başlatılıyor...</span>';
+      }
 
       socket.emit('room:create', {
         roomName,
@@ -1590,12 +1624,16 @@
         username: MY_NAME,
         avatar: MY_AVATAR
       }, (res) => {
-        if (res.success) {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = 'Salonu Başlat ve Katıl 🚀';
+        }
+        if (res && res.success) {
           closeCreateRoomModal();
           showToast(`"${roomName}" salonu başarıyla açıldı! 🚀`, 'success');
           joinRoom(res.roomId, false, password);
         } else {
-          showToast(res.error || 'Salon açılamadı.', 'error');
+          showToast((res && res.error) || 'Salon açılamadı.', 'error');
         }
       });
     }
@@ -1614,13 +1652,13 @@
         peerId: myPeerId,
         password: password || null
       }, (res) => {
-        if (res.success) {
+        if (res && res.success) {
           currentRoomId = roomId;
           currentRoomData = res.room;
           switchToCinemaView(res.room);
           showToast(`"${res.room.name}" salonuna katıldınız! 🍿`, 'success');
         } else {
-          showToast(res.error || 'Odaya katılınamadı!', 'error');
+          showToast((res && res.error) || 'Salona katılınamadı!', 'error');
         }
       });
     }
@@ -1646,6 +1684,12 @@
       document.getElementById('lobbyView').classList.add('hidden');
       document.getElementById('cinemaView').classList.remove('hidden');
 
+      // Tarayıcı URL'sini odayla senkronize et
+      try {
+        const newUrl = `${window.location.pathname}?room=${encodeURIComponent(room.id)}`;
+        window.history.replaceState({ roomId: room.id }, '', newUrl);
+      } catch (e) {}
+
       document.getElementById('theaterRoomName').textContent = room.name || room.id;
       document.getElementById('theaterCategoryBadge').textContent = room.category || 'Genel';
       document.getElementById('theaterControlBadge').textContent = room.controlMode === 'host' ? '👑 Sadece Host' : '🤝 Herkes Kontrol Edebilir';
@@ -1669,7 +1713,7 @@
       // Odaya yeni girişte veya senkronda zamanı ve oynatma durumunu yakala
       pendingInitialSync = {
         time: (typeof room.currentTime === 'number' && !isNaN(room.currentTime)) ? room.currentTime : 0,
-        isPlaying: room.isPlaying !== undefined ? !!room.isPlaying : false
+        isPlaying: room.isPlaying !== undefined ? !!room.isPlaying : true
       };
       ignoreLocalEventsUntil = Date.now() + 3000;
 
@@ -1678,10 +1722,30 @@
       } else {
         initYouTubePlayer(pendingYouTubeId || 'jfKfPfyJRdk');
       }
+
+      // Otomatik oynatmayı garantile
+      if (room.isHost || room.isPlaying) {
+        setTimeout(() => {
+          if (currentVideoType === 'youtube' && isYtReady && ytPlayer && typeof ytPlayer.playVideo === 'function') {
+            ytPlayer.playVideo();
+          } else if (currentVideoType === 'direct' && html5Player) {
+            html5Player.play().catch(() => {});
+          }
+        }, 700);
+      }
     }
 
     function leaveRoomToLobby() {
-      location.reload();
+      currentRoomId = null;
+      currentRoomData = null;
+      try {
+        window.history.replaceState({}, '', window.location.pathname);
+      } catch (e) {}
+      document.getElementById('cinemaView').classList.add('hidden');
+      document.getElementById('lobbyView').classList.remove('hidden');
+      socket.emit('room:leave');
+      fetchLobbyRooms();
+      showToast('Lobiye dönüldü.', 'info', 1200);
     }
 
     function copyRoomLink() {

@@ -77,16 +77,16 @@ const rooms = {
     videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
     videoType: 'direct',
     currentTime: 0,
-    isPlaying: false,
+    isPlaying: true,
     lastUpdated: Date.now(),
     snackBreak: false,
     snackInterval: null,
     breakTimer: 0,
-    hypeScore: 20,
+    hypeScore: 40,
     isFeverActive: false,
     playlist: [
-      { id: 'p1', title: 'Big Buck Bunny (Film Testi)', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', addedBy: 'Sistem' },
-      { id: 'p2', title: 'Lofi Chill Hip Hop', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', addedBy: 'Sistem' }
+      { id: 'p1', title: 'Big Buck Bunny (Film Testi)', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', videoType: 'direct', addedBy: 'Sistem' },
+      { id: 'p2', title: 'Lofi Chill Hip Hop', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', videoType: 'youtube', addedBy: 'Sistem' }
     ],
     currentPlaylistIndex: 0,
     users: {}
@@ -108,10 +108,113 @@ const rooms = {
     snackBreak: false,
     snackInterval: null,
     breakTimer: 0,
-    hypeScore: 20,
+    hypeScore: 65,
     isFeverActive: false,
     playlist: [
-      { id: 'p3', title: 'Lofi Hip Hop Radio 24/7', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', addedBy: 'Sistem' }
+      { id: 'p3', title: 'Lofi Hip Hop Radio 24/7', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', videoType: 'youtube', addedBy: 'Sistem' },
+      { id: 'p4', title: 'Cyberpunk Synthwave Ambience', url: 'https://www.youtube.com/watch?v=pmaEwSj1o9E', videoType: 'youtube', addedBy: 'Sistem' }
+    ],
+    currentPlaylistIndex: 0,
+    users: {}
+  },
+  'anime-salonu': {
+    id: 'anime-salonu',
+    name: '⛩️ Anime & Dizi Salonu',
+    hostId: null,
+    hostName: 'Sistem',
+    password: null,
+    isPrivate: false,
+    controlMode: 'all',
+    category: 'anime',
+    videoUrl: 'https://www.youtube.com/watch?v=pmaEwSj1o9E',
+    videoType: 'youtube',
+    currentTime: 0,
+    isPlaying: true,
+    lastUpdated: Date.now(),
+    snackBreak: false,
+    snackInterval: null,
+    breakTimer: 0,
+    hypeScore: 50,
+    isFeverActive: false,
+    playlist: [
+      { id: 'p5', title: 'Cyberpunk Night City 4K Ambience', url: 'https://www.youtube.com/watch?v=pmaEwSj1o9E', videoType: 'youtube', addedBy: 'Sistem' },
+      { id: 'p6', title: 'Lofi Hip Hop Chill', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk', videoType: 'youtube', addedBy: 'Sistem' }
+    ],
+    currentPlaylistIndex: 0,
+    users: {}
+  },
+  'espor-arenasi': {
+    id: 'espor-arenasi',
+    name: '🎮 Oyun & Espor Arenası',
+    hostId: null,
+    hostName: 'Sistem',
+    password: null,
+    isPrivate: false,
+    controlMode: 'all',
+    category: 'gaming',
+    videoUrl: 'https://www.twitch.tv/elraenn',
+    videoType: 'twitch',
+    currentTime: 0,
+    isPlaying: true,
+    lastUpdated: Date.now(),
+    snackBreak: false,
+    snackInterval: null,
+    breakTimer: 0,
+    hypeScore: 75,
+    isFeverActive: false,
+    playlist: [
+      { id: 'p7', title: 'Twitch Canlı Yayını', url: 'https://www.twitch.tv/elraenn', videoType: 'twitch', addedBy: 'Sistem' }
+    ],
+    currentPlaylistIndex: 0,
+    users: {}
+  },
+  'scifi-4k': {
+    id: 'scifi-4k',
+    name: '🚀 Bilim Kurgu & 4K Sinema',
+    hostId: null,
+    hostName: 'Sistem',
+    password: null,
+    isPrivate: false,
+    controlMode: 'all',
+    category: 'movie',
+    videoUrl: 'https://www.youtube.com/watch?v=m3zvVGJrJA8',
+    videoType: 'youtube',
+    currentTime: 0,
+    isPlaying: true,
+    lastUpdated: Date.now(),
+    snackBreak: false,
+    snackInterval: null,
+    breakTimer: 0,
+    hypeScore: 55,
+    isFeverActive: false,
+    playlist: [
+      { id: 'p8', title: 'Interstellar - No Time For Caution', url: 'https://www.youtube.com/watch?v=m3zvVGJrJA8', videoType: 'youtube', addedBy: 'Sistem' },
+      { id: 'p9', title: 'Tears of Steel (4K Sci-Fi)', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4', videoType: 'direct', addedBy: 'Sistem' }
+    ],
+    currentPlaylistIndex: 0,
+    users: {}
+  },
+  'komedi-kulubu': {
+    id: 'komedi-kulubu',
+    name: '🎬 Popüler Trendler & Komedi',
+    hostId: null,
+    hostName: 'Sistem',
+    password: null,
+    isPrivate: false,
+    controlMode: 'all',
+    category: 'general',
+    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+    videoType: 'direct',
+    currentTime: 0,
+    isPlaying: true,
+    lastUpdated: Date.now(),
+    snackBreak: false,
+    snackInterval: null,
+    breakTimer: 0,
+    hypeScore: 35,
+    isFeverActive: false,
+    playlist: [
+      { id: 'p10', title: 'Tears of Steel Demo', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4', videoType: 'direct', addedBy: 'Sistem' }
     ],
     currentPlaylistIndex: 0,
     users: {}
@@ -209,57 +312,77 @@ io.on('connection', (socket) => {
     socket.emit('lobby:rooms_updated', getPublicRooms());
   });
 
-  // Yeni Oda Oluşturma
+  // Yeni Salon Başlatma / Oluşturma
   socket.on('room:create', (data, callback) => {
-    const rawId = (data.roomName || 'oda')
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, '-')
-      .replace(/-+/g, '-')
-      .slice(0, 24);
-    const roomId = `${rawId}-${Math.random().toString(36).substring(2, 6)}`;
+    try {
+      const roomName = (data && data.roomName && typeof data.roomName === 'string' && data.roomName.trim()) 
+        ? data.roomName.trim() 
+        : 'Yeni Sinema Salonu 🍿';
 
-    const initialVideo = data.initialVideo || 'https://www.youtube.com/watch?v=jfKfPfyJRdk';
+      // Türkçe karakter dönüşümü ile temiz ve geçerli salon ID üretimi
+      const turkishMap = { 'ç':'c', 'ğ':'g', 'ı':'i', 'i':'i', 'ö':'o', 'ş':'s', 'ü':'u', 'Ç':'c', 'Ğ':'g', 'İ':'i', 'Ö':'o', 'Ş':'s', 'Ü':'u' };
+      const normalized = roomName.replace(/[çğlıiöşüÇĞİÖŞÜ]/g, m => turkishMap[m] || m);
+      const rawId = normalized
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+        .slice(0, 24) || 'salon';
+      const roomId = `${rawId}-${Math.random().toString(36).substring(2, 6)}`;
 
-    rooms[roomId] = {
-      id: roomId,
-      name: data.roomName || 'Özel Sinema Odası',
-      hostId: socket.id,
-      hostName: data.username || 'Host',
-      password: data.password ? data.password.trim() : null,
-      isPrivate: !!data.isPrivate,
-      controlMode: data.controlMode || 'all', // 'all' veya 'host'
-      category: data.category || 'movie',
-      videoUrl: initialVideo,
-      videoType: detectVideoType(initialVideo),
-      currentTime: 0,
-      isPlaying: false,
-      lastUpdated: Date.now(),
-      snackBreak: false,
-      snackInterval: null,
-      breakTimer: 0,
-      hypeScore: 20,
-      isFeverActive: false,
-      playlist: [
-        {
-          id: 'item-1',
-          title: 'Başlangıç Videosu',
-          url: initialVideo,
-          addedBy: data.username || 'Host'
-        }
-      ],
-      currentPlaylistIndex: 0,
-      users: {}
-    };
+      const initialVideo = (data && data.initialVideo && typeof data.initialVideo === 'string' && data.initialVideo.trim()) 
+        ? data.initialVideo.trim() 
+        : 'https://www.youtube.com/watch?v=jfKfPfyJRdk';
 
-    broadcastLobbyUpdate();
+      rooms[roomId] = {
+        id: roomId,
+        name: roomName,
+        hostId: socket.id,
+        hostName: (data && data.username) || 'Host',
+        password: (data && data.password && typeof data.password === 'string') ? data.password.trim() : null,
+        isPrivate: !!(data && data.isPrivate),
+        controlMode: (data && data.controlMode) || 'all',
+        category: (data && data.category) || 'movie',
+        videoUrl: initialVideo,
+        videoType: detectVideoType(initialVideo),
+        currentTime: 0,
+        isPlaying: true, // Salon başlatıldığında video otomatik başlar!
+        lastUpdated: Date.now(),
+        snackBreak: false,
+        snackInterval: null,
+        breakTimer: 0,
+        hypeScore: 30,
+        isFeverActive: false,
+        playlist: [
+          {
+            id: 'item-1',
+            title: 'Başlangıç Videosu',
+            url: initialVideo,
+            videoType: detectVideoType(initialVideo),
+            addedBy: (data && data.username) || 'Host'
+          }
+        ],
+        currentPlaylistIndex: 0,
+        users: {}
+      };
 
-    sendDiscordWebhook(
-      '🎬 Yeni Sinema Odası Açıldı!',
-      `**${data.username || 'Biri'}** yeni bir oda oluşturdu: **${rooms[roomId].name}** (Oda: \`${roomId}\`)`,
-      0x10b981
-    );
+      broadcastLobbyUpdate();
 
-    if (callback) callback({ success: true, roomId });
+      sendDiscordWebhook(
+        '🎬 Yeni Sinema Odası Açıldı!',
+        `**${(data && data.username) || 'Biri'}** yeni bir salon başlattı: **${rooms[roomId].name}** (Oda: \`${roomId}\`)`,
+        0x10b981
+      );
+
+      if (callback && typeof callback === 'function') {
+        callback({ success: true, roomId, room: rooms[roomId] });
+      }
+    } catch (err) {
+      console.error('[Room Create Hatası]:', err);
+      if (callback && typeof callback === 'function') {
+        callback({ success: false, error: 'Salon oluşturulamadı: ' + err.message });
+      }
+    }
   });
 
   // Odaya Katılma (Şifre Korumalı & Çok Odalı)
@@ -782,6 +905,49 @@ io.on('connection', (socket) => {
     if (!room || !room.activePoll) return;
     io.to(roomId).emit('poll:ended');
     room.activePoll = null;
+  });
+
+  // Odadan Lobiye Ayrılma
+  socket.on('room:leave', () => {
+    if (socket.roomId && rooms[socket.roomId]) {
+      const room = rooms[socket.roomId];
+      delete room.users[socket.id];
+
+      if (room.hostId === socket.id) {
+        const remainingUserIds = Object.keys(room.users);
+        if (remainingUserIds.length > 0) {
+          const nextHostId = remainingUserIds[0];
+          room.hostId = nextHostId;
+          room.hostName = room.users[nextHostId].username;
+          room.users[nextHostId].isHost = true;
+
+          io.to(socket.roomId).emit('host:changed', {
+            hostId: room.hostId,
+            hostName: room.hostName
+          });
+
+          io.to(socket.roomId).emit('chat:receive', {
+            id: Date.now(),
+            sender: 'PartyFlow',
+            avatar: 'https://cdn-icons-png.flaticon.com/512/3658/3658773.png',
+            message: `👑 Yeni oda sahibi: ${room.hostName}`,
+            isSystem: true,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          });
+        }
+      }
+
+      socket.to(socket.roomId).emit('user:left', {
+        userId: socket.id,
+        username: socket.username,
+        peerId: socket.peerId,
+        users: Object.values(room.users)
+      });
+
+      socket.leave(socket.roomId);
+      socket.roomId = null;
+      broadcastLobbyUpdate();
+    }
   });
 
   // Kullanıcı Ayrıldığında
