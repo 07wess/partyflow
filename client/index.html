@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PartyFlow 2.0 - Yeni Nesil AI Sosyal Sinema Platformu</title>
+  <title>PartyFlow 2.0 - Sosyal Sinema & Birlikte İzleme Platformu</title>
   
   <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,19 +22,18 @@
             mono: ['"JetBrains Mono"', 'monospace'],
           },
           colors: {
-            obsidian: '#050608',
+            obsidian: '#07080c',
             surface: {
-              DEFAULT: '#090a0f',
-              card: '#0e1017',
-              hover: '#141620',
-              glass: 'rgba(14, 16, 23, 0.78)',
+              DEFAULT: '#0b0d13',
+              card: '#10131c',
+              hover: '#171b26',
+              glass: 'rgba(16, 19, 28, 0.78)',
             },
-            cyber: {
+            party: {
               purple: '#a855f7',
-              fuchsia: '#d946ef',
-              cyan: '#06b6d4',
               pink: '#ec4899',
               amber: '#f59e0b',
+              red: '#ef4444',
               emerald: '#10b981',
             }
           }
@@ -50,16 +49,14 @@
 
   <style>
     /* ======================================================== */
-    /* AI WEBSITE & CYBER-LUXURY AESTHETICS                     */
+    /* LUXURY CINEMA & WATCH PARTY AMBIANCE (NO TECH-GRID DOTS) */
     /* ======================================================== */
     body {
-      background-color: #050608;
+      background-color: #07080c;
       background-image: 
-        radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-        radial-gradient(at 15% 15%, rgba(124, 58, 237, 0.15) 0px, transparent 50%),
-        radial-gradient(at 85% 20%, rgba(219, 39, 119, 0.12) 0px, transparent 50%),
-        radial-gradient(at 50% 85%, rgba(6, 182, 212, 0.10) 0px, transparent 50%);
-      background-size: 24px 24px, 100% 100%, 100% 100%, 100% 100%;
+        radial-gradient(at 10% 15%, rgba(168, 85, 247, 0.12) 0px, transparent 55%),
+        radial-gradient(at 90% 15%, rgba(236, 72, 153, 0.10) 0px, transparent 55%),
+        radial-gradient(at 50% 90%, rgba(245, 158, 11, 0.08) 0px, transparent 60%);
       font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
@@ -71,10 +68,10 @@
     }
     .shimmer-card {
       position: relative;
-      background: rgba(14, 16, 23, 0.82);
+      background: rgba(16, 19, 28, 0.82);
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
-      border-radius: 1.25rem;
+      border-radius: 1.5rem;
     }
     .shimmer-card::before {
       content: '';
@@ -82,9 +79,9 @@
       inset: -1px;
       border-radius: inherit;
       padding: 1px;
-      background: linear-gradient(90deg, rgba(168,85,247,0.35), rgba(236,72,153,0.35), rgba(6,182,212,0.35), rgba(168,85,247,0.35));
+      background: linear-gradient(90deg, rgba(168,85,247,0.35), rgba(236,72,153,0.35), rgba(245,158,11,0.35), rgba(168,85,247,0.35));
       background-size: 300% 300%;
-      animation: shimmerBorder 7s linear infinite;
+      animation: shimmerBorder 8s linear infinite;
       -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
       -webkit-mask-composite: xor;
       mask-composite: exclude;
@@ -93,7 +90,7 @@
 
     /* Glass Panels */
     .glass-panel {
-      background: rgba(10, 12, 18, 0.80);
+      background: rgba(11, 13, 19, 0.82);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -110,7 +107,7 @@
       transform: translateY(-1px);
     }
 
-    /* Dynamic Ambilight Halo */
+    /* Dynamic Ambilight Halo Behind Video */
     .video-ambilight {
       box-shadow: 
         0 0 100px -15px rgba(139, 92, 246, 0.32),
@@ -234,7 +231,7 @@
     input[type=range] { accent-color: #a855f7; }
   </style>
 </head>
-<body class="bg-[#050608] text-zinc-100 h-screen w-screen flex flex-col overflow-hidden font-sans select-none antialiased">
+<body class="bg-[#07080c] text-zinc-100 h-screen w-screen flex flex-col overflow-hidden font-sans select-none antialiased">
 
   <!-- ======================================================== -->
   <!-- TOAST BİLDİRİM DOKU                                      -->
@@ -242,31 +239,27 @@
   <div id="toastContainer" class="fixed top-5 right-5 z-[99999] flex flex-col gap-2.5 pointer-events-none max-w-sm w-full"></div>
 
   <!-- ======================================================== -->
-  <!-- SPOTLIGHT KOMUT PALETİ (RAYCAST / LINEAR STYLE Ctrl+K)   -->
+  <!-- HIZLI ARAMA & KOMUT PALETİ (Ctrl+K)                      -->
   <!-- ======================================================== -->
   <div id="spotlightModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-xl z-[99990] flex items-start justify-center pt-20 px-4">
     <div class="shimmer-card w-full max-w-xl p-4 shadow-2xl border border-white/15 overflow-hidden">
-      <!-- Arama Kutusu -->
       <div class="flex items-center gap-3 px-3 py-2.5 border-b border-white/10">
-        <span class="text-purple-400 text-base">✦</span>
-        <input id="spotlightInput" oninput="filterSpotlightCommands()" autocomplete="off" placeholder="Bir komut yazın veya YouTube/film linki yapıştırın..." class="w-full bg-transparent outline-none text-white text-sm placeholder-zinc-500 font-medium" />
+        <span class="text-purple-400 text-base">🔍</span>
+        <input id="spotlightInput" oninput="filterSpotlightCommands()" autocomplete="off" placeholder="Video/film linki yapıştırın veya hızlı komut arayın..." class="w-full bg-transparent outline-none text-white text-sm placeholder-zinc-500 font-medium" />
         <span class="text-[10px] bg-white/10 text-zinc-400 border border-white/10 px-2 py-0.5 rounded font-mono">ESC</span>
       </div>
 
-      <!-- Komut Listesi -->
-      <div id="spotlightList" class="max-h-80 overflow-y-auto py-2 space-y-1 text-xs">
-        <!-- Dinamik komutlar buraya dolacak -->
-      </div>
+      <div id="spotlightList" class="max-h-80 overflow-y-auto py-2 space-y-1 text-xs"></div>
 
       <div class="pt-2 px-2 border-t border-white/5 flex justify-between items-center text-[10px] text-zinc-500 font-mono">
         <span>Seçmek için <strong>ENTER</strong>, Kapatmak için <strong>ESC</strong></span>
-        <span>PartyFlow AI Spotlight</span>
+        <span>PartyFlow Hızlı Komut Paleti</span>
       </div>
     </div>
   </div>
 
   <!-- ======================================================== -->
-  <!-- 1. GÖRÜNÜM: LOBİ VE ODA KEŞFİ (BENTO GRID DASHBOARD)     -->
+  <!-- 1. GÖRÜNÜM: LOBİ VE ODA KEŞFİ (WATCH PARTY DASHBOARD)    -->
   <!-- ======================================================== -->
   <div id="lobbyView" class="flex-1 flex flex-col overflow-hidden">
     
@@ -274,31 +267,31 @@
     <header class="h-18 border-b border-white/5 px-6 sm:px-8 flex items-center justify-between glass-panel flex-shrink-0 z-20">
       <!-- Logo & Versiyon -->
       <div class="flex items-center gap-3.5">
-        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-purple-600 via-fuchsia-600 to-cyan-400 flex items-center justify-center text-2xl shadow-xl shadow-purple-600/30 ring-1 ring-white/20">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-purple-600 via-pink-600 to-amber-400 flex items-center justify-center text-2xl shadow-xl shadow-purple-600/30 ring-1 ring-white/20">
           🍿
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <span class="font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-300 to-cyan-300 tracking-wider text-xl">PARTYFLOW</span>
-            <span class="text-[10px] bg-gradient-to-r from-purple-500/20 to-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded-full font-bold">2.0 AI EDITION</span>
+            <span class="font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300 tracking-wider text-xl">PARTYFLOW</span>
+            <span class="text-[10px] bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-pink-300 border border-pink-500/30 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">WATCH PARTY</span>
           </div>
-          <span class="text-[11px] text-zinc-400 font-medium hidden sm:block">Akıllı Senkronize Sosyal Sinema Platformu</span>
+          <span class="text-[11px] text-zinc-400 font-medium hidden sm:block">Arkadaşlarınla Birlikte Film & Dizi İzle</span>
         </div>
       </div>
 
-      <!-- Hızlı Spotlight Tuşu & Kullanıcı & Eylemler -->
+      <!-- Hızlı Arama & Kullanıcı & Eylemler -->
       <div class="flex items-center gap-3">
-        <!-- Spotlight Kısayol Butonu -->
-        <button onclick="openSpotlight()" class="hidden md:flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/40 rounded-xl px-3 py-1.5 text-xs text-zinc-400 transition" title="Spotlight Aç (Kısayol: Ctrl+K)">
-          <span>🔍 Komut veya Link Ara...</span>
+        <!-- Hızlı Arama Kısayol Butonu -->
+        <button onclick="openSpotlight()" class="hidden md:flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/40 rounded-xl px-3.5 py-2 text-xs text-zinc-400 transition" title="Hızlı Menü (Kısayol: Ctrl+K)">
+          <span>🔍 Video / Film Ara...</span>
           <span class="bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded text-[10px] font-mono border border-white/10">Ctrl+K</span>
         </button>
 
         <!-- Kullanıcı Profili Rozeti -->
-        <div id="lobbyUserBadge" class="flex items-center gap-2.5 bg-surface-card/80 border border-white/10 hover:border-purple-500/40 rounded-full px-3.5 py-1.5 text-xs cursor-pointer transition shadow-md group" title="Adınızı değiştirmek için tıklayın">
+        <div id="lobbyUserBadge" class="flex items-center gap-2.5 bg-surface-card/90 border border-white/10 hover:border-purple-500/40 rounded-full px-3.5 py-1.5 text-xs cursor-pointer transition shadow-md group" title="Adınızı değiştirmek için tıklayın">
           <div class="relative">
             <img id="lobbyUserAvatar" src="https://cdn.discordapp.com/embed/avatars/0.png" class="w-6 h-6 rounded-full object-cover ring-1 ring-purple-500/40" />
-            <span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-[#050608]"></span>
+            <span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-[#07080c]"></span>
           </div>
           <span id="lobbyUserName" class="font-semibold text-zinc-200 group-hover:text-purple-300 transition">Wesley</span>
           <span class="text-[10px] text-zinc-500 group-hover:text-zinc-300">✎</span>
@@ -311,37 +304,37 @@
         </a>
 
         <!-- Yeni Oda Aç Butonu -->
-        <button onclick="openCreateRoomModal()" class="bg-gradient-to-r from-purple-600 via-fuchsia-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xl shadow-purple-600/35 active:scale-95">
+        <button onclick="openCreateRoomModal()" class="bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:from-purple-500 hover:to-pink-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-xl shadow-purple-600/35 active:scale-95">
           <span class="text-sm leading-none">+</span>
           <span>Yeni Oda Aç</span>
         </button>
       </div>
     </header>
 
-    <!-- Lobi Ana İçeriği (Bento Grid) -->
+    <!-- Lobi Ana İçeriği (Watch Party Showcase) -->
     <main class="flex-1 overflow-y-auto px-6 sm:px-10 py-8 max-w-7xl mx-auto w-full">
       
-      <!-- Bento Hero Banner Grid -->
+      <!-- Cinema Party Hero Showcase Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
-        <!-- 1. Büyük Hero Kartı (2 Kolon) -->
+        <!-- 1. Büyük Sinema Hero Kartı (2 Kolon) -->
         <div class="lg:col-span-2 shimmer-card p-8 sm:p-10 flex flex-col justify-between shadow-2xl relative overflow-hidden">
           <div class="relative z-10">
-            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-bold mb-5 tracking-wide">
-              <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
-              AI POWERED SOCIAL THEATER
+            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-xs font-bold mb-5 tracking-wide">
+              <span class="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></span>
+              CANLI SİNEMA & DİZİ SALONLARI
             </div>
             <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
-              Sosyal Sinemanın <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-300">Geleceğine</span> Hoş Geldiniz.
+              Arkadaşlarınla <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300">Aynı Anda</span> Film & Dizi İzle.
             </h1>
             <p class="text-sm sm:text-base text-zinc-400 mt-4 max-w-xl font-normal leading-relaxed">
-              Arkadaşlarınızla sıfır gecikmeli YouTube, 4K video, Twitch ve Netflix ekran paylaşımı. Dahili CineBot AI asistanı, canlı anketler ve sanal sinema koltukları parmaklarınızın ucunda.
+              Mesafe fark etmeksizin; YouTube, yerel MP4 filmleri, Twitch ve WebRTC ekran yayını ile Netflix içeriklerini sıfır gecikmeyle, görüntülü ve sesli sohbet eşliğinde aynı salondaymış gibi izleyin.
             </p>
           </div>
 
           <div class="relative z-10 mt-8 flex flex-wrap gap-3.5">
-            <button onclick="openCreateRoomModal()" class="bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white px-6 py-3.5 rounded-2xl text-xs sm:text-sm font-bold transition shadow-xl shadow-purple-600/35 flex items-center gap-2 active:scale-95">
+            <button onclick="openCreateRoomModal()" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-6 py-3.5 rounded-2xl text-xs sm:text-sm font-bold transition shadow-xl shadow-purple-600/35 flex items-center gap-2 active:scale-95">
               <span>🚀</span>
-              <span>Oda Başlat</span>
+              <span>Hemen Bir Salon Başlat</span>
             </button>
             <button onclick="quickJoinPreset('sinema-salonu')" class="bg-white/5 hover:bg-white/10 text-zinc-200 border border-white/10 hover:border-purple-500/40 px-6 py-3.5 rounded-2xl text-xs sm:text-sm font-semibold transition shadow-lg flex items-center gap-2 active:scale-95">
               <span>🍿</span>
@@ -350,34 +343,47 @@
           </div>
         </div>
 
-        <!-- 2. AI CineBot Kartı (1 Kolon) -->
+        <!-- 2. Sosyal Parti Araçları Kartı (1 Kolon) -->
         <div class="shimmer-card p-6 sm:p-7 flex flex-col justify-between shadow-2xl relative">
           <div>
             <div class="flex items-center justify-between mb-4">
-              <span class="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
-                <span>✨</span>
-                <span>CineBot AI Assistant</span>
+              <span class="text-xs font-bold text-pink-300 flex items-center gap-1.5">
+                <span>🎉</span>
+                <span>Sosyal İzleme Özellikleri</span>
               </span>
-              <span class="text-[10px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 px-2 py-0.5 rounded-full font-mono">ONLINE</span>
+              <span class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono font-bold">● SENKRON</span>
             </div>
-            <h3 class="text-base font-bold text-white mb-2">Bugün Ne İzlemek İstersiniz?</h3>
-            <p class="text-xs text-zinc-400 mb-4">Yapay zekâ destekli sinema motorumuz oda temanıza ve modunuza göre en iyi video akışlarını anında odanıza taşır.</p>
+            <h3 class="text-base font-bold text-white mb-2">Birlikte İzlemeyi Eğlenceli Kılın</h3>
+            <p class="text-xs text-zinc-400 mb-4">PartyFlow; sıradan bir video oynatıcı değil, arkadaşlarınızla kahkahalar atacağınız canlı bir sinema salonudur.</p>
             
-            <div class="space-y-2 text-xs">
-              <button onclick="quickJoinPreset('sinema-salonu'); setTimeout(() => askCineBot('lofi'), 1000);" class="w-full text-left p-2.5 rounded-xl bg-white/5 hover:bg-purple-600/20 border border-white/5 hover:border-purple-500/40 transition flex items-center justify-between text-zinc-300 hover:text-white">
-                <span>🎵 Gece Lo-fi & Rahatlatıcı Beats</span>
-                <span class="text-purple-400 text-[10px]">▶</span>
-              </button>
-              <button onclick="quickJoinPreset('sinema-salonu'); setTimeout(() => askCineBot('scifi'), 1000);" class="w-full text-left p-2.5 rounded-xl bg-white/5 hover:bg-purple-600/20 border border-white/5 hover:border-purple-500/40 transition flex items-center justify-between text-zinc-300 hover:text-white">
-                <span>🚀 4K Bilim Kurgu Film Demosu</span>
-                <span class="text-purple-400 text-[10px]">▶</span>
-              </button>
+            <div class="space-y-2.5 text-xs">
+              <div class="flex items-center gap-2.5 p-2 rounded-xl bg-white/5 text-zinc-300">
+                <span class="text-base">🔊</span>
+                <div>
+                  <strong class="block text-zinc-200 text-xs">Canlı Ses Efektleri</strong>
+                  <span class="text-[11px] text-zinc-400">Alkış, kahkaha ve korna sesleriyle ortamı coşturun</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-2.5 p-2 rounded-xl bg-white/5 text-zinc-300">
+                <span class="text-base">💺</span>
+                <div>
+                  <strong class="block text-zinc-200 text-xs">Sanal Koltuklar & Emojiler</strong>
+                  <span class="text-[11px] text-zinc-400">Salondaki koltuğunuzdan anlık emoji reaksiyonları fırlatın</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-2.5 p-2 rounded-xl bg-white/5 text-zinc-300">
+                <span class="text-base">🍿</span>
+                <div>
+                  <strong class="block text-zinc-200 text-xs">Mola & Anket Sistemi</strong>
+                  <span class="text-[11px] text-zinc-400">Atıştırmalık molası verin, canlı film oylamaları açın</span>
+                </div>
+              </div>
             </div>
           </div>
 
           <div class="pt-4 border-t border-white/5 text-[11px] text-zinc-500 flex items-center justify-between font-mono">
-            <span>Spotlight: Ctrl + K</span>
-            <span class="text-cyan-400">Canlı Radar ●</span>
+            <span>Kısayol: Ctrl + K</span>
+            <span class="text-emerald-400">0 Gecikme ●</span>
           </div>
         </div>
       </div>
@@ -396,7 +402,7 @@
           <!-- Arama Inputu -->
           <div class="flex items-center bg-surface-card/90 border border-white/10 focus-within:border-purple-500/50 rounded-2xl px-3.5 py-2 text-xs text-white w-full sm:w-72 transition shadow-inner">
             <span class="text-zinc-500 mr-2 text-xs">🔍</span>
-            <input id="roomSearchInput" oninput="filterRooms()" placeholder="Oda, film veya yayıncı ara..." class="bg-transparent outline-none w-full placeholder-zinc-500 text-xs font-medium" />
+            <input id="roomSearchInput" oninput="filterRooms()" placeholder="Oda veya film ara..." class="bg-transparent outline-none w-full placeholder-zinc-500 text-xs font-medium" />
           </div>
 
           <!-- Yenile Butonu -->
@@ -440,7 +446,7 @@
         </div>
       </div>
 
-      <!-- Sağ: Canlı Radar, Hype Barı, Spotlight, Davet, Sinema Modu & Profil -->
+      <!-- Sağ: Canlı Radar, Hızlı Menü, Anket, Davet, Sinema Modu & Profil -->
       <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
         
         <!-- Canlı Senkron Radar & Ping -->
@@ -449,10 +455,10 @@
           <span id="radarLatencyText">18ms • ULTRA-SYNC</span>
         </div>
 
-        <!-- Spotlight Açma Butonu -->
-        <button onclick="openSpotlight()" class="glass-pill px-2.5 py-1.5 rounded-xl text-xs text-zinc-300 flex items-center gap-1.5" title="Spotlight Aç (Ctrl+K)">
-          <span>✦</span>
-          <span class="hidden md:inline font-semibold">Spotlight</span>
+        <!-- Hızlı Menü Butonu -->
+        <button onclick="openSpotlight()" class="glass-pill px-2.5 py-1.5 rounded-xl text-xs text-zinc-300 flex items-center gap-1.5" title="Hızlı Menü (Ctrl+K)">
+          <span>🔍</span>
+          <span class="hidden md:inline font-semibold">Hızlı Ara</span>
         </button>
 
         <!-- Canlı Anket Butonu -->
@@ -509,11 +515,11 @@
         
         <!-- Video URL Barı -->
         <div id="videoTopBar" class="glass-panel rounded-2xl p-2.5 flex flex-wrap items-center gap-2.5 border border-white/5 shadow-xl">
-          <div class="flex-1 flex items-center bg-[#050608]/90 border border-white/10 rounded-xl px-3.5 py-2 focus-within:border-purple-500 transition min-w-[260px] shadow-inner">
+          <div class="flex-1 flex items-center bg-[#07080c]/90 border border-white/10 rounded-xl px-3.5 py-2 focus-within:border-purple-500 transition min-w-[260px] shadow-inner">
             <span id="urlPlatformIcon" class="mr-2.5 text-xs text-purple-400 font-bold">🔗</span>
-            <input id="videoUrlInput" oninput="detectPlatformIcon()" type="text" placeholder="YouTube, MP4 film linki veya Twitch kanalı yapıştırın..." class="bg-transparent text-xs w-full outline-none text-white placeholder-zinc-500 font-medium" />
+            <input id="videoUrlInput" oninput="detectPlatformIcon()" type="text" placeholder="YouTube, MP4 film adresi veya Twitch linki yapıştırın..." class="bg-transparent text-xs w-full outline-none text-white placeholder-zinc-500 font-medium" />
           </div>
-          <button id="loadVideoBtn" class="bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white px-5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-purple-600/30 active:scale-95">
+          <button id="loadVideoBtn" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-purple-600/30 active:scale-95">
             <span>▶</span>
             <span>Yükle</span>
           </button>
@@ -574,9 +580,9 @@
           </div>
 
           <!-- Canlı Oda Anketi Yüzen Kartı (Floating Poll Card) -->
-          <div id="activePollContainer" class="hidden absolute top-4 left-4 z-30 max-w-xs w-full glass-panel bg-surface-card/95 border border-cyan-500/30 rounded-2xl p-4 shadow-2xl">
+          <div id="activePollContainer" class="hidden absolute top-4 left-4 z-30 max-w-xs w-full glass-panel bg-surface-card/95 border border-purple-500/30 rounded-2xl p-4 shadow-2xl">
             <div class="flex items-center justify-between mb-2">
-              <span class="text-[10px] bg-cyan-500/20 text-cyan-300 font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">📊 Canlı Anket</span>
+              <span class="text-[10px] bg-purple-500/20 text-purple-300 font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">📊 Canlı Oylama</span>
               <button onclick="closePollCard()" class="text-zinc-500 hover:text-white text-xs">✕</button>
             </div>
             <h4 id="pollQuestionText" class="text-xs font-bold text-white mb-3">Sıradaki film ne olsun?</h4>
@@ -598,14 +604,9 @@
             <div id="snackCountdown" class="text-6xl sm:text-7xl font-black font-mono my-6 text-white tracking-widest bg-zinc-950/80 px-8 py-3 rounded-3xl border border-white/10 shadow-2xl">
               05:00
             </div>
-            <div class="flex gap-3">
-              <button onclick="askCineBot('quiz')" class="text-xs font-bold bg-cyan-600/30 hover:bg-cyan-600/50 text-cyan-200 border border-cyan-500/40 px-5 py-2.5 rounded-2xl transition">
-                🧠 Mola Sinema Quiz'i Başlat
-              </button>
-              <button onclick="stopBreak()" class="text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/20 px-6 py-2.5 rounded-2xl transition active:scale-95">
-                Molayı Bitir ▶
-              </button>
-            </div>
+            <button onclick="stopBreak()" class="text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/20 px-6 py-2.5 rounded-2xl transition active:scale-95">
+              Molayı Bitir ve Devam Et ▶
+            </button>
           </div>
 
           <!-- WebRTC Çoklu Kamera Izgarası (Sol Alt Şerit) -->
@@ -633,7 +634,7 @@
 
         <!-- SANAL SİNEMA KOLTUKLARI (VIRTUAL THEATER SEATS DOCK) -->
         <div id="theaterSeatsBar" class="glass-panel px-4 py-2 rounded-2xl flex items-center justify-between border border-white/5">
-          <div class="flex items-center gap-2 text-xs text-zinc-400">
+          <div class="flex items-center gap-2.5 text-xs text-zinc-400">
             <span class="text-sm">💺</span>
             <span class="font-bold text-zinc-300 text-[11px]">SALON KOLTUKLARI:</span>
             <div id="theaterSeatsContainer" class="flex items-center gap-2">
@@ -645,25 +646,25 @@
           <div class="flex items-center gap-2.5">
             <div class="flex items-center gap-1.5 text-xs text-amber-300 font-bold">
               <span class="animate-bounce">🔥</span>
-              <span class="text-[11px]">HYPE:</span>
+              <span class="text-[11px]">PARTİ ENERJİSİ:</span>
               <span id="hypePercentText" class="font-mono text-amber-400">0%</span>
             </div>
             <div class="w-24 sm:w-32 h-2 bg-white/10 rounded-full overflow-hidden relative">
               <div id="hypeProgressBar" class="h-full bg-gradient-to-r from-amber-500 via-pink-500 to-purple-500 w-0 transition-all duration-300 rounded-full"></div>
             </div>
-            <button onclick="boostHype()" class="bg-gradient-to-r from-amber-500/20 to-pink-500/20 hover:from-amber-500/30 hover:to-pink-500/30 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-lg text-[10px] font-bold transition active:scale-90" title="Salona Hype Bas!">
+            <button onclick="boostHype()" class="bg-gradient-to-r from-amber-500/20 to-pink-500/20 hover:from-amber-500/30 hover:to-pink-500/30 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-lg text-[10px] font-bold transition active:scale-90" title="Salona Enerji Bas!">
               🚀 +Hype
             </button>
           </div>
         </div>
 
-        <!-- ALT KONTROL ÇUBUĞU (PRO CINEMA PLAYER BAR & AUDIO VISUALIZER) -->
+        <!-- ALT KONTROL ÇUBUĞU (PRO CINEMA PLAYER BAR & AUDIO EQUALIZER) -->
         <div id="bottomControlBar" class="glass-panel rounded-2xl p-3 sm:p-3.5 flex flex-wrap items-center justify-between gap-3 sm:gap-4 border border-white/10 shadow-2xl">
           
           <!-- Oynat/Durdur, İlerleme & Ses & CC -->
           <div class="flex items-center gap-3.5 flex-1 min-w-[280px]">
             <!-- Dev Neon Oynat / Durdur Butonu -->
-            <button id="playPauseBtn" onclick="togglePlayPause()" class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-purple-600 via-fuchsia-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white flex items-center justify-center text-lg transition shadow-lg shadow-purple-600/40 flex-shrink-0 active:scale-90 hover:scale-105">
+            <button id="playPauseBtn" onclick="togglePlayPause()" class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-purple-600 via-pink-600 to-amber-500 hover:from-purple-500 hover:to-pink-500 text-white flex items-center justify-center text-lg transition shadow-lg shadow-purple-600/40 flex-shrink-0 active:scale-90 hover:scale-105">
               ▶
             </button>
 
@@ -689,14 +690,14 @@
                   <span id="durationDisplay" class="text-zinc-500">00:00</span>
                 </div>
 
-                <!-- Siber Ses Dalgası (Audio Visualizer) -->
-                <div id="audioEqContainer" class="flex items-end gap-0.5 h-3 px-2">
-                  <div class="w-0.5 bg-cyan-400 eq-bar" style="animation-delay: 0.1s;"></div>
+                <!-- Sinema Ses Dalgası (Audio Visualizer) -->
+                <div id="audioEqContainer" class="flex items-end gap-0.5 h-3 px-2" title="Canlı Ses Dalgası">
+                  <div class="w-0.5 bg-pink-400 eq-bar" style="animation-delay: 0.1s;"></div>
                   <div class="w-0.5 bg-purple-400 eq-bar" style="animation-delay: 0.3s;"></div>
-                  <div class="w-0.5 bg-pink-400 eq-bar" style="animation-delay: 0.2s;"></div>
-                  <div class="w-0.5 bg-cyan-400 eq-bar" style="animation-delay: 0.4s;"></div>
+                  <div class="w-0.5 bg-amber-400 eq-bar" style="animation-delay: 0.2s;"></div>
+                  <div class="w-0.5 bg-pink-400 eq-bar" style="animation-delay: 0.4s;"></div>
                   <div class="w-0.5 bg-purple-400 eq-bar" style="animation-delay: 0.15s;"></div>
-                  <div class="w-0.5 bg-pink-400 eq-bar" style="animation-delay: 0.25s;"></div>
+                  <div class="w-0.5 bg-amber-400 eq-bar" style="animation-delay: 0.25s;"></div>
                 </div>
               </div>
             </div>
@@ -748,81 +749,47 @@
         </div>
       </div>
 
-      <!-- SAĞ: SEKME YAPISI (SOHBET / AI CINEBOT / SIRADAKİLER / KATILIMCILAR) -->
+      <!-- SAĞ: SEKME YAPISI (SOHBET / SIRADAKİLER / KATILIMCILAR) -->
       <aside id="rightSidebar" class="w-80 sm:w-92 border-l border-white/10 bg-surface/90 glass-panel flex flex-col flex-shrink-0 transition-all duration-300">
         
         <!-- Sekme Butonları -->
-        <div class="h-14 border-b border-white/10 px-2.5 flex items-center justify-between text-xs font-bold bg-white/5">
-          <div class="flex gap-1">
-            <button onclick="switchSidebarTab('chat')" id="tabBtnChat" class="px-2.5 py-2 rounded-xl bg-purple-600 text-white shadow-md shadow-purple-600/30 transition">💬 Sohbet</button>
-            <button onclick="switchSidebarTab('ai')" id="tabBtnAi" class="px-2.5 py-2 rounded-xl text-zinc-400 hover:text-white transition">✨ CineBot</button>
-            <button onclick="switchSidebarTab('playlist')" id="tabBtnPlaylist" class="px-2.5 py-2 rounded-xl text-zinc-400 hover:text-white transition">📜 Sıra (<span id="playlistCount">0</span>)</button>
-            <button onclick="switchSidebarTab('users')" id="tabBtnUsers" class="px-2.5 py-2 rounded-xl text-zinc-400 hover:text-white transition">👥 Üyeler (<span id="usersCount">1</span>)</button>
-          </div>
+        <div class="h-14 border-b border-white/10 px-3 flex items-center justify-between text-xs font-bold bg-white/5 gap-1">
+          <button onclick="switchSidebarTab('chat')" id="tabBtnChat" class="flex-1 py-2 rounded-xl bg-purple-600 text-white shadow-md shadow-purple-600/30 transition text-center font-bold">💬 Sohbet</button>
+          <button onclick="switchSidebarTab('playlist')" id="tabBtnPlaylist" class="flex-1 py-2 rounded-xl text-zinc-400 hover:text-white transition text-center font-semibold">📜 Sıra (<span id="playlistCount">0</span>)</button>
+          <button onclick="switchSidebarTab('users')" id="tabBtnUsers" class="flex-1 py-2 rounded-xl text-zinc-400 hover:text-white transition text-center font-semibold">👥 Salondakiler (<span id="usersCount">1</span>)</button>
         </div>
 
-        <!-- 1. SEKME: CANLI SOHBET -->
+        <!-- 1. SEKME: CANLI SOHBET & HIZLI EMOJİLER -->
         <div id="tabContentChat" class="flex-1 flex flex-col overflow-hidden">
           <div id="messages" class="flex-1 overflow-y-auto p-4 space-y-3.5 text-xs"></div>
           
           <!-- Hızlı Emoji Çubuğu & Mesaj Formu -->
-          <div class="p-3 border-t border-white/10 bg-[#050608]/80">
-            <div class="flex gap-1.5 mb-2 px-1 text-sm">
-              <button onclick="insertChatEmoji('🍿')" class="hover:scale-125 transition">🍿</button>
-              <button onclick="insertChatEmoji('🔥')" class="hover:scale-125 transition">🔥</button>
-              <button onclick="insertChatEmoji('😂')" class="hover:scale-125 transition">😂</button>
-              <button onclick="insertChatEmoji('❤️')" class="hover:scale-125 transition">❤️</button>
-              <button onclick="insertChatEmoji('👏')" class="hover:scale-125 transition">👏</button>
-              <button onclick="insertChatEmoji('😱')" class="hover:scale-125 transition">😱</button>
+          <div class="p-3 border-t border-white/10 bg-[#07080c]/80">
+            <div class="flex items-center justify-between gap-1.5 mb-2 px-1 text-sm">
+              <div class="flex gap-1.5">
+                <button onclick="insertChatEmoji('🍿')" class="hover:scale-125 transition">🍿</button>
+                <button onclick="insertChatEmoji('🔥')" class="hover:scale-125 transition">🔥</button>
+                <button onclick="insertChatEmoji('😂')" class="hover:scale-125 transition">😂</button>
+                <button onclick="insertChatEmoji('❤️')" class="hover:scale-125 transition">❤️</button>
+                <button onclick="insertChatEmoji('👏')" class="hover:scale-125 transition">👏</button>
+                <button onclick="insertChatEmoji('😱')" class="hover:scale-125 transition">😱</button>
+              </div>
+              <!-- Hızlı Film Tavsiyesi Chip'i -->
+              <button onclick="suggestWatchIdea()" class="text-[10px] text-pink-300 hover:text-white bg-pink-500/15 hover:bg-pink-500/25 px-2 py-0.5 rounded-md font-semibold border border-pink-500/30 transition">
+                🍿 Ne İzlesek?
+              </button>
             </div>
 
             <form id="chatForm" onsubmit="event.preventDefault(); sendMessage();" class="flex gap-2">
-              <input id="chatInput" autocomplete="off" placeholder="Mesaj yazın..." class="flex-1 bg-surface-card border border-white/10 rounded-xl px-3.5 py-2.5 text-xs outline-none focus:border-purple-500 text-white placeholder-zinc-500 transition shadow-inner font-medium" />
-              <button type="submit" class="bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-md shadow-purple-600/30 active:scale-95">
+              <input id="chatInput" autocomplete="off" placeholder="Bir mesaj yazın..." class="flex-1 bg-surface-card border border-white/10 rounded-xl px-3.5 py-2.5 text-xs outline-none focus:border-purple-500 text-white placeholder-zinc-500 transition shadow-inner font-medium" />
+              <button type="submit" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-md shadow-purple-600/30 active:scale-95">
                 ➤
               </button>
             </form>
           </div>
         </div>
 
-        <!-- 2. SEKME: CINEBOT AI ASİSTANI -->
-        <div id="tabContentAi" class="hidden flex-1 flex flex-col overflow-hidden p-4">
-          <div class="flex items-center gap-2 mb-3">
-            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-600 to-cyan-400 flex items-center justify-center text-sm shadow-md shadow-cyan-500/20">
-              ✨
-            </div>
-            <div>
-              <h3 class="text-xs font-bold text-white">CineBot AI Sinema Asistanı</h3>
-              <p class="text-[10px] text-zinc-400">Film önerileri, sahne trivia'sı ve mola oyunları</p>
-            </div>
-          </div>
-
-          <!-- AI Hızlı Aksiyon Hapları -->
-          <div class="grid grid-cols-2 gap-2 mb-3">
-            <button onclick="askCineBot('recommend')" class="glass-pill p-2 rounded-xl text-left text-[11px] font-semibold text-purple-300 hover:text-white">
-              🎬 Ne İzlesek?
-            </button>
-            <button onclick="askCineBot('trivia')" class="glass-pill p-2 rounded-xl text-left text-[11px] font-semibold text-cyan-300 hover:text-white">
-              🧠 Video Bilgisi
-            </button>
-            <button onclick="askCineBot('quiz')" class="glass-pill p-2 rounded-xl text-left text-[11px] font-semibold text-pink-300 hover:text-white">
-              🍿 Mola Quiz'i
-            </button>
-            <button onclick="askCineBot('shortcuts')" class="glass-pill p-2 rounded-xl text-left text-[11px] font-semibold text-amber-300 hover:text-white">
-              ⌨️ Kısayollar
-            </button>
-          </div>
-
-          <!-- AI Mesaj Akışı -->
-          <div id="aiMessagesContainer" class="flex-1 overflow-y-auto space-y-2.5 text-xs pr-1">
-            <div class="glass-card p-3 rounded-2xl border border-cyan-500/20 text-zinc-300">
-              <span class="text-cyan-400 font-bold block mb-1">✨ CineBot:</span>
-              Merhaba! Sinema odanızdayım. Oynatılan video hakkında bilgi verebilir, ruh halinize göre YouTube veya film önerileri yapabilirim. Yukarıdaki butonlardan birini seçebilir veya sohbete yazabilirsiniz!
-            </div>
-          </div>
-        </div>
-
-        <!-- 3. SEKME: OYNATMA LİSTESİ / QUEUE -->
+        <!-- 2. SEKME: OYNATMA LİSTESİ / QUEUE -->
         <div id="tabContentPlaylist" class="hidden flex-1 flex flex-col overflow-hidden p-4">
           <div class="mb-3.5 flex items-center justify-between">
             <div>
@@ -850,7 +817,7 @@
           <div id="playlistItems" class="flex-1 overflow-y-auto space-y-2.5 text-xs"></div>
         </div>
 
-        <!-- 4. SEKME: KATILIMCILAR & HOST YÖNETİMİ -->
+        <!-- 3. SEKME: KATILIMCILAR & HOST YÖNETİMİ -->
         <div id="tabContentUsers" class="hidden flex-1 flex flex-col overflow-hidden p-4">
           <div class="flex items-center justify-between mb-3.5">
             <h3 class="text-xs font-bold text-zinc-200">Salondaki Katılımcılar</h3>
@@ -873,25 +840,25 @@
       <div class="flex justify-between items-center mb-4">
         <h3 class="text-base font-black text-white flex items-center gap-2">
           <span>📊</span>
-          <span>Yeni Canlı Anket Başlat</span>
+          <span>Yeni Canlı Oylama Başlat</span>
         </h3>
         <button onclick="closeCreatePollModal()" class="text-zinc-500 hover:text-white">✕</button>
       </div>
 
       <div class="space-y-3.5 text-xs">
         <div>
-          <label class="block text-zinc-400 mb-1.5 font-bold">Anket Sorusu</label>
-          <input id="pollQuestionInput" placeholder="Örn: Sıradaki video ne olsun?" class="w-full bg-[#050608] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-cyan-500 font-medium" />
+          <label class="block text-zinc-400 mb-1.5 font-bold">Oylama Sorusu</label>
+          <input id="pollQuestionInput" placeholder="Örn: Sıradaki film ne olsun?" class="w-full bg-[#07080c] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-purple-500 font-medium" />
         </div>
 
         <div>
           <label class="block text-zinc-400 mb-1.5 font-bold">Seçenekler (Her satıra bir tane)</label>
-          <textarea id="pollOptionsInput" rows="3" placeholder="Anime izleyelim&#10;Film devam etsin&#10;Komedi videoları" class="w-full bg-[#050608] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-cyan-500 font-medium"></textarea>
+          <textarea id="pollOptionsInput" rows="3" placeholder="Anime izleyelim&#10;Film devam etsin&#10;Komedi videoları" class="w-full bg-[#07080c] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-purple-500 font-medium"></textarea>
         </div>
 
         <div class="pt-2">
-          <button onclick="submitCreatePoll()" class="w-full bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-cyan-600/30 active:scale-95">
-            Anketi Odada Başlat 🚀
+          <button onclick="submitCreatePoll()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-purple-600/30 active:scale-95">
+            Oylamayı Başlat 🚀
           </button>
         </div>
       </div>
@@ -904,21 +871,21 @@
       <div class="flex justify-between items-center mb-5">
         <h3 class="text-lg font-black text-white flex items-center gap-2">
           <span>🍿</span>
-          <span>Yeni Sinema Odası Aç</span>
+          <span>Yeni Sinema Salonu Aç</span>
         </h3>
         <button onclick="closeCreateRoomModal()" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white flex items-center justify-center transition">✕</button>
       </div>
 
       <div class="space-y-4 text-xs">
         <div>
-          <label class="block text-zinc-400 mb-1.5 font-bold">Oda Adı</label>
-          <input id="newRoomName" placeholder="Örn: Marvel Film Gecesi 🎬" class="w-full bg-[#050608] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-purple-500 font-medium" />
+          <label class="block text-zinc-400 mb-1.5 font-bold">Salon Adı</label>
+          <input id="newRoomName" placeholder="Örn: Gece Sineması Kulübü 🎬" class="w-full bg-[#07080c] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-purple-500 font-medium" />
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-zinc-400 mb-1.5 font-bold">Kategori</label>
-            <select id="newRoomCategory" class="w-full bg-[#050608] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-purple-500 font-medium">
+            <select id="newRoomCategory" class="w-full bg-[#07080c] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-purple-500 font-medium">
               <option value="movie">🎬 Film & Dizi</option>
               <option value="music">🎵 Müzik & Lofi</option>
               <option value="anime">⛩️ Anime</option>
@@ -928,7 +895,7 @@
           </div>
           <div>
             <label class="block text-zinc-400 mb-1.5 font-bold">Kontrol Yetkisi</label>
-            <select id="newRoomControlMode" class="w-full bg-[#050608] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-purple-500 font-medium">
+            <select id="newRoomControlMode" class="w-full bg-[#07080c] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-purple-500 font-medium">
               <option value="all">🤝 Herkes Kontrol Etsin</option>
               <option value="host">👑 Sadece Ben (Host)</option>
             </select>
@@ -937,17 +904,17 @@
 
         <div>
           <label class="block text-zinc-400 mb-1.5 font-bold">Oda Şifresi (İsteğe Bağlı)</label>
-          <input id="newRoomPassword" type="password" placeholder="Boş bırakırsanız herkese açık olur" class="w-full bg-[#050608] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-purple-500 font-medium" />
+          <input id="newRoomPassword" type="password" placeholder="Boş bırakırsanız herkese açık olur" class="w-full bg-[#07080c] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-purple-500 font-medium" />
         </div>
 
         <div>
           <label class="block text-zinc-400 mb-1.5 font-bold">Başlangıç Video Linki (İsteğe Bağlı)</label>
-          <input id="newRoomVideo" placeholder="YouTube, MP4 veya Twitch linki" class="w-full bg-[#050608] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-purple-500 font-medium" />
+          <input id="newRoomVideo" placeholder="YouTube, MP4 veya Twitch linki" class="w-full bg-[#07080c] border border-white/10 rounded-xl p-3 text-white outline-none focus:border-purple-500 font-medium" />
         </div>
 
         <div class="pt-2">
-          <button onclick="submitCreateRoom()" class="w-full bg-gradient-to-r from-purple-600 via-fuchsia-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white font-bold py-3.5 rounded-2xl transition shadow-xl shadow-purple-600/35 active:scale-95 text-sm">
-            Odayı Başlat ve Katıl 🚀
+          <button onclick="submitCreateRoom()" class="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3.5 rounded-2xl transition shadow-xl shadow-purple-600/35 active:scale-95 text-sm">
+            Salonu Başlat ve Katıl 🚀
           </button>
         </div>
       </div>
@@ -958,14 +925,14 @@
   <div id="passwordModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
     <div class="glass-panel bg-surface-card/95 border border-white/15 rounded-3xl w-full max-w-sm p-6 shadow-2xl relative text-center">
       <span class="text-4xl mb-3 block">🔒</span>
-      <h3 class="text-base font-black text-white mb-1">Bu Oda Şifrelidir</h3>
+      <h3 class="text-base font-black text-white mb-1">Bu Salon Şifrelidir</h3>
       <p class="text-xs text-zinc-400 mb-4 font-medium">Giriş yapabilmek için lütfen oda şifresini yazın.</p>
       
-      <input id="roomPasswordInput" type="password" placeholder="Oda şifresi..." class="w-full bg-[#050608] border border-white/10 rounded-xl p-3 text-white text-center outline-none focus:border-purple-500 text-xs mb-4 font-medium" />
+      <input id="roomPasswordInput" type="password" placeholder="Oda şifresi..." class="w-full bg-[#07080c] border border-white/10 rounded-xl p-3 text-white text-center outline-none focus:border-purple-500 text-xs mb-4 font-medium" />
       
       <div class="flex gap-2.5">
         <button onclick="closePasswordModal()" class="flex-1 bg-white/5 hover:bg-white/10 py-3 rounded-xl text-xs text-zinc-300 font-semibold transition active:scale-95">İptal</button>
-        <button onclick="submitPasswordJoin()" class="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 py-3 rounded-xl text-xs text-white font-bold transition shadow-lg shadow-purple-600/30 active:scale-95">Giriş Yap</button>
+        <button onclick="submitPasswordJoin()" class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 py-3 rounded-xl text-xs text-white font-bold transition shadow-lg shadow-purple-600/30 active:scale-95">Giriş Yap</button>
       </div>
     </div>
   </div>
@@ -984,7 +951,7 @@
       <div class="space-y-3.5 text-xs">
         <div>
           <label class="block text-zinc-400 mb-1.5 font-bold">Video Oynatma Yetkisi</label>
-          <select id="editControlMode" class="w-full bg-[#050608] border border-white/10 rounded-xl p-2.5 text-white outline-none font-medium">
+          <select id="editControlMode" class="w-full bg-[#07080c] border border-white/10 rounded-xl p-2.5 text-white outline-none font-medium">
             <option value="all">🤝 Herkes Kontrol Edebilsin</option>
             <option value="host">👑 Sadece Ben (Host) Kontrol Edeyim</option>
           </select>
@@ -992,7 +959,7 @@
 
         <div>
           <label class="block text-zinc-400 mb-1.5 font-bold">Yeni Oda Şifresi (Kaldırmak için boş bırakın)</label>
-          <input id="editRoomPassword" type="password" placeholder="Şifre belirleyin..." class="w-full bg-[#050608] border border-white/10 rounded-xl p-2.5 text-white outline-none font-medium" />
+          <input id="editRoomPassword" type="password" placeholder="Şifre belirleyin..." class="w-full bg-[#07080c] border border-white/10 rounded-xl p-2.5 text-white outline-none font-medium" />
         </div>
 
         <div class="pt-2">
@@ -1008,7 +975,7 @@
   <script id="ytIframeApiTag" src="https://www.youtube.com/iframe_api"></script>
 
   <!-- ======================================================== -->
-  <!-- 4. JAVASCRIPT LOGIC & STATE ENGINE                      -->
+  <!-- 4. JAVASCRIPT LOGIC & WATCH PARTY STATE ENGINE           -->
   <!-- ======================================================== -->
   <script>
     // ========================================================
@@ -1023,7 +990,6 @@
         error: { icon: '⚠️', border: 'border-rose-500/50', bg: 'bg-rose-950/85', text: 'text-rose-300' },
         warning: { icon: '🍿', border: 'border-amber-500/50', bg: 'bg-amber-950/85', text: 'text-amber-300' },
         info: { icon: 'ℹ️', border: 'border-purple-500/50', bg: 'bg-purple-950/85', text: 'text-purple-300' },
-        ai: { icon: '✨', border: 'border-cyan-500/50', bg: 'bg-cyan-950/85', text: 'text-cyan-300' },
       }[type] || { icon: 'ℹ️', border: 'border-purple-500/50', bg: 'bg-purple-950/85', text: 'text-purple-300' };
 
       toast.className = `pointer-events-auto flex items-center gap-3 p-3.5 rounded-2xl glass-panel ${config.bg} ${config.border} border shadow-2xl text-xs font-medium text-white toast-anim-in`;
@@ -1110,9 +1076,6 @@
       renderRoomsGrid(rooms);
     });
 
-    // ========================================================
-    // C. SYNC RADAR & LATENCY PING
-    // ========================================================
     function startRadarPing() {
       setInterval(() => {
         const start = Date.now();
@@ -1125,22 +1088,19 @@
     }
 
     // ========================================================
-    // D. SPOTLIGHT KOMUT PALETİ ENGINE
+    // C. HIZLI ARAMA & KOMUT PALETİ (Ctrl+K)
     // ========================================================
     const spotlightCommands = [
-      { id: 'lofi', title: '🎵 Lofi Chill Beats Başlat', desc: 'YouTube üzerinden 24/7 kesintisiz lo-fi akışı', action: () => quickLoad('https://www.youtube.com/watch?v=jfKfPfyJRdk') },
+      { id: 'lofi', title: '🎵 Lofi Chill Beats Başlat', desc: 'YouTube üzerinden 24/7 lo-fi müzik akışı', action: () => quickLoad('https://www.youtube.com/watch?v=jfKfPfyJRdk') },
       { id: 'movie_demo', title: '🍿 4K Film Demosu Başlat', desc: 'Big Buck Bunny yüksek çözünürlük video testi', action: () => quickLoad('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4') },
-      { id: 'twitch_demo', title: '🟣 Twitch Canlı Yayını Başlat', desc: 'Canlı Twitch yayınını odaya taşı', action: () => quickLoad('https://www.twitch.tv/elraenn') },
-      { id: 'ai_suggest', title: '✨ CineBot AI: Film Önerisi İste', desc: 'Ruh halinize göre yapay zekâ video tavsiyesi al', action: () => askCineBot('recommend') },
-      { id: 'ai_trivia', title: '🧠 CineBot AI: Video Hakkında Bilgi', desc: 'Oynatılan içerik hakkında trivia ve sahne notları', action: () => askCineBot('trivia') },
-      { id: 'ai_quiz', title: '🎯 CineBot AI: Mola Bilgi Yarışması', desc: 'Odadaki herkesle 3 soruluk sinema yarışması yap', action: () => askCineBot('quiz') },
-      { id: 'new_poll', title: '📊 Canlı Oda Anketi Aç', desc: 'Odadakilere soru sor ve anlık oylama başlat', action: () => openCreatePollModal() },
-      { id: 'boost_hype', title: '🔥 Salona Hype Bas! (+15 Enerji)', desc: 'Party Fever barını doldur ve kutlamayı başlat', action: () => boostHype() },
+      { id: 'twitch_demo', title: '🟣 Twitch Canlı Yayını Başlat', desc: 'Canlı Twitch yayınını salona taşı', action: () => quickLoad('https://www.twitch.tv/elraenn') },
+      { id: 'new_poll', title: '📊 Canlı Oda Anketi Aç', desc: 'Salondakilere soru sor ve anlık oylama başlat', action: () => openCreatePollModal() },
+      { id: 'boost_hype', title: '🔥 Salona Hype Bas! (+15 Enerji)', desc: 'Parti Fever barını doldur ve kutlamayı başlat', action: () => boostHype() },
       { id: 'toggle_cinema', title: '💡 Sinema Modunu Aç / Kapat', desc: 'Tüm menüleri karartarak sadece filme odaklan', action: () => toggleCinemaMode() },
       { id: 'toggle_fs', title: '⛶ Tam Ekran Modu (Kısayol: F)', desc: 'Ekranı tam boyuta genişlet', action: () => toggleFullScreen() },
       { id: 'toggle_theater', title: '⇲ Geniş Ekran Modu (Kısayol: T)', desc: 'Sohbet panelini gizle / genişlet', action: () => toggleSidebarCollapse() },
       { id: 'toggle_cc', title: '💬 Altyazı (CC) Aç / Kapat (Kısayol: C)', desc: 'Türkçe altyazı modunu değiştir', action: () => toggleCaptions() },
-      { id: 'copy_link', title: '📋 Oda Davet Linkini Kopyala', desc: 'Arkadaşlarına göndermek için bağlantıyı panoya al', action: () => copyRoomLink() },
+      { id: 'copy_link', title: '📋 Salon Davet Linkini Kopyala', desc: 'Arkadaşlarına göndermek için bağlantıyı panoya al', action: () => copyRoomLink() },
       { id: 'snack_break', title: '🍿 5 Dakika Atıştırmalık Molası Ver', desc: 'Videoyu durdur ve mola sayacını başlat', action: () => startBreak(5) }
     ];
 
@@ -1162,7 +1122,6 @@
       const list = document.getElementById('spotlightList');
       list.innerHTML = '';
 
-      // Eğer yapıştırılan bir URL ise doğrudan "Oynat" komutu öner
       if (query.startsWith('http://') || query.startsWith('https://') || query.includes('youtube.com') || query.includes('youtu.be')) {
         const item = document.createElement('div');
         item.className = 'p-3 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 border border-purple-500/40 text-white cursor-pointer transition flex items-center justify-between';
@@ -1204,7 +1163,6 @@
       });
     }
 
-    // Spotlight Klavye Yakalama (Ctrl+K & ESC)
     document.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
         e.preventDefault();
@@ -1224,89 +1182,21 @@
       if (e.target.id === 'spotlightModal') closeSpotlight();
     };
 
-    // ========================================================
-    // E. CINEBOT AI ASİSTANI ENGINE
-    // ========================================================
-    function askCineBot(type) {
-      switchSidebarTab('ai');
-      const container = document.getElementById('aiMessagesContainer');
-
-      if (type === 'recommend') {
-        appendAiMessage(`
-          <strong>🎬 Ruh Halinize Göre AI Film & Müzik Tavsiyeleri:</strong>
-          <div class="space-y-1.5 mt-2">
-            <button onclick="quickLoad('https://www.youtube.com/watch?v=jfKfPfyJRdk')" class="w-full text-left p-1.5 bg-white/5 hover:bg-purple-600/30 rounded-lg flex justify-between items-center text-[11px]">
-              <span>🎵 Lofi Chill Beats (Sohbet & Dinlenme)</span>
-              <span class="text-purple-400 font-bold">Oynat ▶</span>
-            </button>
-            <button onclick="quickLoad('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4')" class="w-full text-left p-1.5 bg-white/5 hover:bg-purple-600/30 rounded-lg flex justify-between items-center text-[11px]">
-              <span>🚀 Tears of Steel (Sci-Fi & Aksiyon)</span>
-              <span class="text-purple-400 font-bold">Oynat ▶</span>
-            </button>
-            <button onclick="quickLoad('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')" class="w-full text-left p-1.5 bg-white/5 hover:bg-purple-600/30 rounded-lg flex justify-between items-center text-[11px]">
-              <span>🍿 Big Buck Bunny (4K Renkli Animasyon)</span>
-              <span class="text-purple-400 font-bold">Oynat ▶</span>
-            </button>
-          </div>
-        `);
-      } else if (type === 'trivia') {
-        appendAiMessage(`
-          <strong>🧠 Oynatılan İçerik Analizi:</strong>
-          <p class="mt-1 text-[11px] text-zinc-300">
-            Şu anda salonda oynatılan video ses ve görüntü parametreleriyle senkronize ediliyor.
-            <br>• <strong>Ses Kalitesi:</strong> 320kbps Stereo Spatial Audio
-            <br>• <strong>Senkron Gecikmesi:</strong> &lt; 0.05 saniye (Tam Senkron)
-            <br>💡 <em>İpucu:</em> Videoyu genişletmek için klavyenizden <code class="text-purple-300">T</code> tuşuna, tam ekran için <code class="text-purple-300">F</code> tuşuna basabilirsiniz.
-          </p>
-        `);
-      } else if (type === 'quiz') {
-        appendAiMessage(`
-          <strong>🍿 Mola Sinema Quiz'i:</strong>
-          <p class="mt-1 text-[11px] font-semibold text-amber-300">"Hangi yönetmen Inception ve Interstellar filmlerinin yönetmenidir?"</p>
-          <div class="grid grid-cols-2 gap-1.5 mt-2">
-            <button onclick="checkQuizAnswer(this, false)" class="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-left text-[10px]">A) Steven Spielberg</button>
-            <button onclick="checkQuizAnswer(this, true)" class="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-left text-[10px]">B) Christopher Nolan</button>
-            <button onclick="checkQuizAnswer(this, false)" class="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-left text-[10px]">C) Quentin Tarantino</button>
-            <button onclick="checkQuizAnswer(this, false)" class="p-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-left text-[10px]">D) James Cameron</button>
-          </div>
-        `);
-      } else if (type === 'shortcuts') {
-        appendAiMessage(`
-          <strong>⌨️ Profesyonel Kısayol Tuşları:</strong>
-          <ul class="mt-1.5 space-y-1 text-[10px] font-mono text-zinc-400">
-            <li><strong class="text-purple-300">Ctrl + K</strong>: Spotlight Komut Paleti</li>
-            <li><strong class="text-purple-300">F</strong>: Tam Ekran Modu</li>
-            <li><strong class="text-purple-300">T</strong>: Geniş Ekran / Sohbeti Gizle</li>
-            <li><strong class="text-purple-300">C</strong>: Altyazı (CC) Aç / Kapat</li>
-            <li><strong class="text-purple-300">Space</strong>: Oynat / Durdur</li>
-            <li><strong class="text-purple-300">M</strong>: Sesi Kapat / Aç (Mute)</li>
-          </ul>
-        `);
-      }
-    }
-
-    function checkQuizAnswer(btn, isCorrect) {
-      if (isCorrect) {
-        btn.classList.add('bg-emerald-600', 'text-white');
-        showToast('Tebrikler! Doğru cevap Christopher Nolan! 🎯', 'success');
-        boostHype();
-      } else {
-        btn.classList.add('bg-rose-600', 'text-white');
-        showToast('Yanlış cevap, tekrar deneyin! 😅', 'error');
-      }
-    }
-
-    function appendAiMessage(html) {
-      const container = document.getElementById('aiMessagesContainer');
-      const box = document.createElement('div');
-      box.className = 'glass-card p-3 rounded-2xl border border-cyan-500/20 text-zinc-200';
-      box.innerHTML = `<span class="text-cyan-400 font-bold block mb-1">✨ CineBot AI:</span>${html}`;
-      container.appendChild(box);
-      container.scrollTop = container.scrollHeight;
+    // Hızlı İzleme Önerisi Gönder (Sohbete)
+    function suggestWatchIdea() {
+      const ideas = [
+        { title: "🎵 Lofi Chill Hip Hop Radio", url: "https://www.youtube.com/watch?v=jfKfPfyJRdk" },
+        { title: "🚀 Tears of Steel (Sci-Fi Film)", url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4" },
+        { title: "🍿 Big Buck Bunny (4K Animasyon)", url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" },
+        { title: "🟣 Twitch Canlı Yayın", url: "https://www.twitch.tv/elraenn" }
+      ];
+      const pick = ideas[Math.floor(Math.random() * ideas.length)];
+      quickLoad(pick.url);
+      showToast(`Tavsiye başlatıldı: ${pick.title}`, 'info');
     }
 
     // ========================================================
-    // F. HYPE METER & PARTY FEVER
+    // D. HYPE METER & PARTY FEVER
     // ========================================================
     function boostHype(amount = 12) {
       socket.emit('hype:boost', { roomId: currentRoomId, amount });
@@ -1329,7 +1219,6 @@
       document.body.classList.add('party-fever-active');
       setTimeout(() => document.body.classList.remove('party-fever-active'), 1500);
 
-      // Ekranda 10 adet rastgele emoji patlat
       const emojis = ['🎉', '🔥', '🍿', '🚀', '❤️', '🍿', '✨', '🔥'];
       for (let i = 0; i < 12; i++) {
         setTimeout(() => {
@@ -1339,7 +1228,7 @@
     }
 
     // ========================================================
-    // G. CANLI ODA ANKETİ ENGINE (LIVE INTERACTIVE POLL)
+    // E. CANLI ODA ANKETİ ENGINE
     // ========================================================
     function openCreatePollModal() {
       document.getElementById('createPollModal').classList.remove('hidden');
@@ -1357,7 +1246,7 @@
       }
       socket.emit('poll:start', { roomId: currentRoomId, question: q, options: rawOptions });
       closeCreatePollModal();
-      showToast('Canlı anket salonda başlatıldı! 📊', 'success');
+      showToast('Canlı oylama salonda başlatıldı! 📊', 'success');
     }
 
     socket.on('poll:started', (poll) => {
@@ -1400,10 +1289,10 @@
         btn.className = 'w-full relative overflow-hidden rounded-xl p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-left transition active:scale-98';
         btn.onclick = () => socket.emit('poll:vote', { roomId: currentRoomId, optionIndex: idx });
         btn.innerHTML = `
-          <div class="absolute inset-0 bg-cyan-600/25 transition-all duration-300" style="width: ${pct}%"></div>
+          <div class="absolute inset-0 bg-purple-600/30 transition-all duration-300" style="width: ${pct}%"></div>
           <div class="relative z-10 flex justify-between items-center font-medium">
             <span class="text-zinc-200">${escapeHtml(opt.text)}</span>
-            <span class="font-mono text-cyan-300 font-bold">${pct}% (${opt.votes})</span>
+            <span class="font-mono text-purple-300 font-bold">${pct}% (${opt.votes})</span>
           </div>
         `;
         container.appendChild(btn);
@@ -1419,7 +1308,7 @@
     }
 
     // ========================================================
-    // H. SANAL SİNEMA KOLTUKLARI ENGINE
+    // F. SANAL SİNEMA KOLTUKLARI ENGINE
     // ========================================================
     function updateTheaterSeatsUI(users) {
       const container = document.getElementById('theaterSeatsContainer');
@@ -1436,7 +1325,7 @@
             <img src="${u.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" class="w-5 h-5 rounded-full object-cover ring-1 ring-white/20" />
             <span class="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
           </div>
-          <span class="text-[10px] font-semibold text-zinc-300 truncate max-w-[60px]">${escapeHtml(u.username)}</span>
+          <span class="text-[10px] font-semibold text-zinc-300 truncate max-w-[65px]">${escapeHtml(u.username)}</span>
           <div id="seat-bubble-${u.id}" class="hidden absolute -top-7 left-1/2 -translate-x-1/2 bg-purple-600 text-white text-xs px-2 py-0.5 rounded-md shadow-xl pointer-events-none transition animate-bounce"></div>
         `;
         container.appendChild(seat);
@@ -1458,7 +1347,7 @@
     }
 
     // ========================================================
-    // I. LOBİ & ODA LİSTELEME
+    // G. LOBİ & ODA LİSTELEME
     // ========================================================
     function fetchLobbyRooms() {
       socket.emit('lobby:get_rooms');
@@ -1474,9 +1363,9 @@
           <div class="col-span-full py-20 text-center glass-panel rounded-3xl border border-white/5">
             <span class="text-5xl block mb-3 animate-bounce">🍿</span>
             <h3 class="text-base font-bold text-white mb-1">Şu an açık oda bulunmuyor</h3>
-            <p class="text-xs text-zinc-400 mb-5">Hemen ilk odayı oluşturun ve arkadaşlarınızı davet edin!</p>
+            <p class="text-xs text-zinc-400 mb-5">Hemen ilk salonu oluşturun ve arkadaşlarınızı davet edin!</p>
             <button onclick="openCreateRoomModal()" class="bg-purple-600 hover:bg-purple-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow-lg shadow-purple-600/30">
-              + Yeni Oda Oluştur
+              + Yeni Salon Oluştur
             </button>
           </div>
         `;
@@ -1485,7 +1374,7 @@
 
       rooms.forEach(r => {
         const card = document.createElement('div');
-        card.className = 'glass-card rounded-2xl p-5 transition flex flex-col justify-between group cursor-pointer';
+        card.className = 'glass-card rounded-2xl p-5 transition flex flex-col justify-between group cursor-pointer bg-surface-card hover:bg-surface-hover border border-white/5 hover:border-purple-500/40 shadow-xl';
         card.onclick = (e) => {
           if (!e.target.closest('button')) joinRoom(r.id, r.hasPassword);
         };
@@ -1526,7 +1415,7 @@
               <span class="${r.isPlaying ? 'text-purple-400 animate-pulse' : 'text-zinc-500'}">●</span>
               <span class="text-zinc-400 text-[11px]">${r.isPlaying ? 'Oynatılıyor' : 'Beklemede'}</span>
             </div>
-            <button onclick="joinRoom('${r.id}', ${r.hasPassword})" class="bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-md shadow-purple-600/30 active:scale-95">
+            <button onclick="joinRoom('${r.id}', ${r.hasPassword})" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition shadow-md shadow-purple-600/30 active:scale-95">
               Katıl →
             </button>
           </div>
@@ -1545,7 +1434,6 @@
       joinRoom(roomId, false);
     }
 
-    // Modal Yönetimi
     function openCreateRoomModal() {
       document.getElementById('createRoomModal').classList.remove('hidden');
     }
@@ -1554,7 +1442,7 @@
     }
 
     function submitCreateRoom() {
-      const roomName = document.getElementById('newRoomName').value.trim() || 'Yeni Sinema Odası';
+      const roomName = document.getElementById('newRoomName').value.trim() || 'Yeni Sinema Salonu';
       const category = document.getElementById('newRoomCategory').value;
       const controlMode = document.getElementById('newRoomControlMode').value;
       const password = document.getElementById('newRoomPassword').value;
@@ -1571,10 +1459,10 @@
       }, (res) => {
         if (res.success) {
           closeCreateRoomModal();
-          showToast(`"${roomName}" odası başarıyla oluşturuldu! 🚀`, 'success');
+          showToast(`"${roomName}" salonu başarıyla açıldı! 🚀`, 'success');
           joinRoom(res.roomId, false, password);
         } else {
-          showToast(res.error || 'Oda oluşturulamadı.', 'error');
+          showToast(res.error || 'Salon açılamadı.', 'error');
         }
       });
     }
@@ -1597,7 +1485,7 @@
           currentRoomId = roomId;
           currentRoomData = res.room;
           switchToCinemaView(res.room);
-          showToast(`"${res.room.name}" odasına katıldınız! 🍿`, 'success');
+          showToast(`"${res.room.name}" salonuna katıldınız! 🍿`, 'success');
         } else {
           showToast(res.error || 'Odaya katılınamadı!', 'error');
         }
@@ -1653,7 +1541,7 @@
     function copyRoomLink() {
       const link = `${window.location.origin}/?room=${encodeURIComponent(currentRoomId)}`;
       navigator.clipboard.writeText(link).then(() => {
-        showToast('Oda davet bağlantısı panoya kopyalandı! 📋', 'success');
+        showToast('Salon davet bağlantısı panoya kopyalandı! 📋', 'success');
         const icon = document.getElementById('theaterCopyIcon');
         const text = document.getElementById('theaterCopyText');
         if (icon) icon.textContent = '✓';
@@ -1687,7 +1575,7 @@
     }
 
     // ========================================================
-    // J. VİDEO OYNATICI (YOUTUBE, HTML5, TWITCH, EKRAN PAYLAŞIMI)
+    // H. VİDEO OYNATICI MOTORU
     // ========================================================
     let currentVideoType = 'youtube';
     let ytPlayer = null;
@@ -1771,7 +1659,7 @@
           playerVars: {
             autoplay: 1,
             controls: 1,
-            fs: 0, // YouTube dahili tam ekran tuşunu gizle (PartyFlow kontrolleri kullanılsın)
+            fs: 0,
             modestbranding: 1,
             rel: 0,
             enablejsapi: 1,
@@ -2007,7 +1895,7 @@
     }
 
     // ========================================================
-    // K. SOKET SENKRONİZASYONU
+    // I. SOKET SENKRONİZASYONU
     // ========================================================
     socket.on('video:source_updated', ({ videoUrl }) => {
       loadVideoSource(videoUrl, false);
@@ -2062,7 +1950,7 @@
     });
 
     // ========================================================
-    // L. ATIŞTIRMALIK MOLASI (SNACK BREAK)
+    // J. ATIŞTIRMALIK MOLASI (SNACK BREAK)
     // ========================================================
     const breakMenuBtn = document.getElementById('breakMenuBtn');
     const breakDropdown = document.getElementById('breakDropdown');
@@ -2102,7 +1990,7 @@
     }
 
     // ========================================================
-    // M. REAKSİYONLAR & SFX
+    // K. REAKSİYONLAR & SFX
     // ========================================================
     function sendReaction(type) {
       socket.emit('reaction:trigger', { roomId: currentRoomId, type, sender: MY_NAME });
@@ -2185,7 +2073,7 @@
     }
 
     // ========================================================
-    // N. TAM EKRAN VE GENİŞ EKRAN (THEATER) KONTROLLERİ
+    // L. TAM EKRAN VE GENİŞ EKRAN (THEATER) KONTROLLERİ
     // ========================================================
     function isCurrentlyFullscreen() {
       return !!(
@@ -2350,7 +2238,7 @@
     });
 
     // ========================================================
-    // O. WEBRTC KAMERA & SES & EKRAN PAYLAŞIMI
+    // M. WEBRTC KAMERA & SES & EKRAN PAYLAŞIMI
     // ========================================================
     let myPeerId = null;
     let localStream = null;
@@ -2416,7 +2304,7 @@
       updateUsersListUI(users);
       updateTheaterSeatsUI(users);
       if (user && user.username) {
-        showToast(`${user.username} odaya katıldı! 👋`, 'info');
+        showToast(`${user.username} salona katıldı! 👋`, 'info');
       }
       if (peerId && localStream && peer) {
         const call = peer.call(peerId, localStream);
@@ -2431,7 +2319,7 @@
       updateUsersListUI(users);
       updateTheaterSeatsUI(users);
       if (username) {
-        showToast(`${username} odadan ayrıldı.`, 'info');
+        showToast(`${username} salondan ayrıldı.`, 'info');
       }
       const box = document.getElementById(`cam-${peerId}`);
       if (box) box.remove();
@@ -2544,21 +2432,20 @@
     window.addEventListener('DOMContentLoaded', initWebRTC);
 
     // ========================================================
-    // P. SAĞ PANEL (SOHBET, AI, PLAYLIST & KATILIMCILAR)
+    // N. SAĞ PANEL (SOHBET, OYNATMA LİSTESİ & KATILIMCILAR)
     // ========================================================
     function switchSidebarTab(tab) {
       document.getElementById('tabContentChat').classList.toggle('hidden', tab !== 'chat');
-      document.getElementById('tabContentAi').classList.toggle('hidden', tab !== 'ai');
       document.getElementById('tabContentPlaylist').classList.toggle('hidden', tab !== 'playlist');
       document.getElementById('tabContentUsers').classList.toggle('hidden', tab !== 'users');
 
-      const tabs = ['chat', 'ai', 'playlist', 'users'];
+      const tabs = ['chat', 'playlist', 'users'];
       tabs.forEach(t => {
         const btn = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
         if (t === tab) {
-          btn.className = "px-2.5 py-2 rounded-xl bg-purple-600 text-white shadow-md shadow-purple-600/30 transition font-bold";
+          btn.className = "flex-1 py-2 rounded-xl bg-purple-600 text-white shadow-md shadow-purple-600/30 transition text-center font-bold";
         } else {
-          btn.className = "px-2.5 py-2 rounded-xl text-zinc-400 hover:text-white transition font-medium";
+          btn.className = "flex-1 py-2 rounded-xl text-zinc-400 hover:text-white transition text-center font-semibold";
         }
       });
     }
@@ -2597,7 +2484,7 @@
             </div>
             <div class="px-3.5 py-2 rounded-2xl text-xs break-words shadow-md leading-relaxed font-normal ${
               isMe 
-                ? 'bg-gradient-to-r from-purple-600 to-cyan-600 text-white rounded-tr-xs shadow-purple-600/20' 
+                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-tr-xs shadow-purple-600/20' 
                 : 'bg-surface-card text-zinc-100 rounded-tl-xs border border-white/10 shadow-black/40'
             }">
               ${escapeHtml(msg.message)}
@@ -2679,7 +2566,7 @@
         const row = document.createElement('div');
         row.className = `p-2.5 rounded-2xl border flex items-center justify-between gap-3 transition ${
           isCurrent 
-            ? 'bg-gradient-to-r from-purple-950/50 to-cyan-950/50 border-cyan-500/50 text-cyan-200 shadow-lg shadow-cyan-900/20' 
+            ? 'bg-gradient-to-r from-purple-950/50 to-pink-950/50 border-pink-500/50 text-pink-200 shadow-lg shadow-purple-900/20' 
             : 'bg-surface-card border-white/5 text-zinc-300 hover:border-white/15'
         }`;
 
@@ -2691,7 +2578,7 @@
             ${thumbUrl ? `
               <div class="relative w-14 h-9 rounded-lg overflow-hidden flex-shrink-0 bg-black border border-white/10">
                 <img src="${thumbUrl}" class="w-full h-full object-cover" />
-                ${isCurrent ? '<span class="absolute inset-0 bg-cyan-600/30 flex items-center justify-center text-white text-[10px] font-bold">▶</span>' : ''}
+                ${isCurrent ? '<span class="absolute inset-0 bg-pink-600/30 flex items-center justify-center text-white text-[10px] font-bold">▶</span>' : ''}
               </div>
             ` : `
               <div class="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-xs flex-shrink-0">
@@ -2732,7 +2619,7 @@
           <div class="flex items-center gap-2.5">
             <div class="relative">
               <img src="${u.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" class="w-7 h-7 rounded-full object-cover ring-1 ring-white/15" />
-              <span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-[#050608]"></span>
+              <span class="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-[#07080c]"></span>
             </div>
             <div>
               <div class="flex items-center gap-1.5">
@@ -2751,7 +2638,7 @@
     function kickUser(targetId) {
       if (confirm('Bu kullanıcıyı odadan çıkarmak istediğinize emin misiniz?')) {
         socket.emit('room:kick_user', { roomId: currentRoomId, targetUserId: targetId });
-        showToast('Kullanıcı odadan çıkarıldı.', 'info');
+        showToast('Kullanıcı salondan çıkarıldı.', 'info');
       }
     }
 
