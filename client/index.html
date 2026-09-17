@@ -300,29 +300,16 @@
             <button id="stopShareBannerBtn" onclick="stopScreenShare()" class="bg-black/50 hover:bg-black/80 px-2 py-0.5 rounded-lg text-[11px] transition text-zinc-200">Yayını Durdur</button>
           </div>
 
-          <!-- Video İçi Hızlı Kontroller (Geniş Ekran & Tam Ekran) -->
-          <div class="absolute top-3 right-3 z-30 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            <button id="theaterOverlayBtn" onclick="toggleSidebarCollapse()" class="bg-black/60 hover:bg-black/90 backdrop-blur-md text-white border border-white/10 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition shadow-lg flex items-center gap-1" title="Geniş Ekran / Sohbeti Gizle (Kısayol: T)">
-              <span>⇲</span>
-              <span class="text-[11px] hidden sm:inline">Genişlet</span>
-            </button>
-            <button id="fsOverlayBtn" onclick="toggleFullScreen()" class="bg-black/60 hover:bg-black/90 backdrop-blur-md text-white border border-white/10 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition shadow-lg flex items-center gap-1" title="Tam Ekran (Kısayol: F)">
-              <span>⛶</span>
-              <span class="text-[11px] hidden sm:inline">Tam Ekran</span>
-            </button>
-          </div>
-
-          <!-- Video İçi Yüzen Kontrol Çubuğu (Tam Ekran ve Hover İçin) -->
-          <div id="videoFloatingControls" class="absolute bottom-3 right-3 z-30 flex items-center gap-2 bg-black/75 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-xl">
-            <button onclick="togglePlayPause()" class="hover:text-purple-400 text-white font-bold text-sm" title="Oynat / Durdur (Space)">⏯</button>
-            <span id="floatingTimeDisplay" class="text-[11px] font-mono text-zinc-300">00:00 / 00:00</span>
+          <!-- Tam Ekran Üst Menüsü (Sadece Tam Ekranda Görünür, YouTube ve Diğer Video Butonlarını Asla Kapatmaz) -->
+          <div id="fullscreenFloatingBar" class="hidden absolute top-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-black/80 backdrop-blur-md border border-white/10 px-4 py-1.5 rounded-2xl shadow-2xl transition-opacity duration-200">
+            <span class="text-xs font-bold text-purple-300">🍿 PartyFlow</span>
             <div class="h-3 w-[1px] bg-white/20"></div>
-            <button onclick="sendReaction('❤️')" class="text-sm hover:scale-130 transition" title="Kalp Gönder">❤️</button>
-            <button onclick="sendReaction('😂')" class="text-sm hover:scale-130 transition" title="Kahkaha Gönder">😂</button>
+            <button onclick="sendReaction('❤️')" class="text-sm hover:scale-130 transition" title="Aşk">❤️</button>
+            <button onclick="sendReaction('😂')" class="text-sm hover:scale-130 transition" title="Kahkaha">😂</button>
             <button onclick="sendReaction('🍿')" class="text-sm hover:scale-130 transition" title="Popcorn">🍿</button>
             <div class="h-3 w-[1px] bg-white/20"></div>
-            <button onclick="toggleSidebarCollapse()" class="hover:text-purple-400 text-white text-xs" title="Geniş Ekran / Sohbet (T)">⇲</button>
-            <button onclick="toggleFullScreen()" class="hover:text-purple-400 text-white text-xs" title="Tam Ekran (F)">⛶</button>
+            <button onclick="toggleSidebarCollapse()" class="text-xs text-zinc-300 hover:text-white px-2 py-0.5 rounded bg-zinc-800/80 transition" title="Sohbeti Aç/Kapat (T)">⇲ Sohbet</button>
+            <button onclick="toggleFullScreen()" class="text-xs text-zinc-300 hover:text-white px-2 py-0.5 rounded bg-zinc-800/80 transition" title="Tam Ekrandan Çık (F veya ESC)">✕ Küçült</button>
           </div>
 
           <!-- Uçuşan Reaksiyon Emojileri Katmanı -->
@@ -392,6 +379,12 @@
               <button onclick="toggleMute()" id="muteBtn" class="hover:text-white">🔊</button>
               <input id="volumeBar" type="range" min="0" max="100" value="80" class="w-16 h-1 bg-zinc-800 rounded appearance-none cursor-pointer accent-purple-500" />
             </div>
+
+            <!-- Altyazı (CC) Butonu -->
+            <button onclick="toggleCaptions()" id="captionsBtn" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700/60 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1 shadow-sm" title="Altyazıyı Aç / Kapat (Kısayol: C)">
+              <span class="font-bold text-[10px] bg-zinc-950 px-1 py-0.5 rounded border border-zinc-700 text-purple-300">CC</span>
+              <span class="hidden sm:inline">Altyazı</span>
+            </button>
           </div>
 
           <!-- Soundboard (Canlı Ses Efektleri) -->
@@ -1360,16 +1353,16 @@
     function handleFullscreenChange() {
       const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
       const fsBtn = document.getElementById('fullscreenBtn');
-      const fsOverlayBtn = document.getElementById('fsOverlayBtn');
+      const fsBar = document.getElementById('fullscreenFloatingBar');
       const videoContainer = document.getElementById('videoContainer');
 
       if (isFs) {
         if (fsBtn) fsBtn.innerHTML = '<span class="text-sm font-bold">⛶</span><span class="hidden sm:inline font-bold">Çıkış</span>';
-        if (fsOverlayBtn) fsOverlayBtn.innerHTML = '<span>✕</span><span class="text-[11px] hidden sm:inline">Küçült</span>';
+        if (fsBar) fsBar.classList.remove('hidden');
         videoContainer.classList.add('is-fullscreen');
       } else {
         if (fsBtn) fsBtn.innerHTML = '<span class="text-sm font-bold">⛶</span><span class="hidden sm:inline font-bold">Tam Ekran</span>';
-        if (fsOverlayBtn) fsOverlayBtn.innerHTML = '<span>⛶</span><span class="text-[11px] hidden sm:inline">Tam Ekran</span>';
+        if (fsBar) fsBar.classList.add('hidden');
         videoContainer.classList.remove('is-fullscreen');
         videoContainer.classList.remove('hide-cursor');
       }
@@ -1377,6 +1370,42 @@
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+
+    // Altyazı (CC) Kontrolü
+    function toggleCaptions() {
+      const btn = document.getElementById('captionsBtn');
+      if (currentVideoType === 'youtube' && isYtReady && ytPlayer) {
+        try {
+          if (typeof ytPlayer.loadModule === 'function') {
+            ytPlayer.loadModule('captions');
+          }
+          const currentTrack = (typeof ytPlayer.getOption === 'function') ? ytPlayer.getOption('captions', 'track') : null;
+          if (currentTrack && currentTrack.languageCode) {
+            if (typeof ytPlayer.setOption === 'function') ytPlayer.setOption('captions', 'track', {});
+            if (typeof ytPlayer.unloadModule === 'function') ytPlayer.unloadModule('captions');
+            if (btn) {
+              btn.classList.remove('bg-purple-600/30', 'text-purple-300', 'border-purple-500/50');
+              btn.classList.add('text-zinc-300');
+            }
+          } else {
+            if (typeof ytPlayer.setOption === 'function') ytPlayer.setOption('captions', 'track', { languageCode: 'tr' });
+            if (btn) {
+              btn.classList.add('bg-purple-600/30', 'text-purple-300', 'border-purple-500/50');
+              btn.classList.remove('text-zinc-300');
+            }
+          }
+        } catch (e) {
+          console.warn('Altyazı ayar hatası:', e);
+        }
+      } else if (currentVideoType === 'direct' && html5Player.textTracks && html5Player.textTracks.length > 0) {
+        const track = html5Player.textTracks[0];
+        track.mode = track.mode === 'showing' ? 'hidden' : 'showing';
+        if (btn) {
+          btn.classList.toggle('text-purple-300', track.mode === 'showing');
+          btn.classList.toggle('bg-purple-600/30', track.mode === 'showing');
+        }
+      }
+    }
 
     // Tam ekranda fare hareketsiz kaldığında imleci gizle
     let fsCursorTimeout = null;
@@ -1399,7 +1428,7 @@
       toggleFullScreen();
     });
 
-    // Klavye Kısayolları (F = Tam Ekran, T = Geniş Ekran, Boşluk = Oynat/Durdur, M = Ses Kapat/Aç)
+    // Klavye Kısayolları (F = Tam Ekran, T = Geniş Ekran, C = Altyazı, Boşluk = Oynat/Durdur, M = Ses Kapat/Aç)
     document.addEventListener('keydown', (e) => {
       const tag = (e.target.tagName || '').toLowerCase();
       if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) {
@@ -1411,6 +1440,9 @@
       } else if (e.key === 't' || e.key === 'T') {
         e.preventDefault();
         toggleSidebarCollapse();
+      } else if (e.key === 'c' || e.key === 'C') {
+        e.preventDefault();
+        toggleCaptions();
       } else if (e.key === ' ' || e.code === 'Space') {
         e.preventDefault();
         togglePlayPause();
