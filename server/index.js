@@ -787,6 +787,29 @@ io.on('connection', (socket) => {
   });
 });
 
+// ==========================================
+// 8. SUNUCU PERİYODİK VİDEO SENKRONİZASYON KALP ATIŞI (HEARTBEAT)
+// ==========================================
+setInterval(() => {
+  const now = Date.now();
+  for (const roomId in rooms) {
+    const room = rooms[roomId];
+    if (!room) continue;
+    const userCount = Object.keys(room.users || {}).length;
+    if (userCount === 0) continue;
+
+    if (room.isPlaying && !room.snackBreak) {
+      const elapsed = (now - room.lastUpdated) / 1000;
+      const calculatedCurrentTime = room.currentTime + elapsed;
+      io.to(roomId).emit('video:heartbeat', {
+        currentTime: calculatedCurrentTime,
+        isPlaying: true,
+        lastUpdated: now
+      });
+    }
+  }
+}, 2500);
+
 // Sunucuyu Başlat
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {

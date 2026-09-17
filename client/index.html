@@ -578,16 +578,6 @@
           <!-- 4. Ekran Paylaşımı Oynatıcısı (Netflix / Dizi) -->
           <video id="screenSharePlayer" class="hidden w-full h-full object-contain" autoplay playsinline></video>
 
-          <!-- Video Oynat / Başlat Cam Katmanı -->
-          <div id="playOverlay" onclick="togglePlayPause()" class="hidden absolute inset-0 bg-black/45 backdrop-blur-[2px] z-25 flex flex-col items-center justify-center cursor-pointer group/overlay transition-all">
-            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-purple-600 via-pink-600 to-amber-500 text-white flex items-center justify-center text-2xl sm:text-3xl shadow-2xl shadow-purple-600/60 transform group-hover/overlay:scale-110 transition active:scale-95 pl-1 ring-4 ring-white/20">
-              ▶
-            </div>
-            <span class="mt-3 text-xs font-bold text-white bg-black/75 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/15 shadow-xl">
-              Filmi Başlat / Devam Et
-            </span>
-          </div>
-
           <!-- Ekran Paylaşımı Bildirimi -->
           <div id="screenShareBanner" class="hidden absolute top-4 left-4 bg-indigo-600/90 backdrop-blur-xl text-white px-4 py-2 rounded-2xl text-xs font-bold z-30 flex items-center gap-2.5 shadow-2xl border border-indigo-400/40 animate-pulse">
             <span class="w-2.5 h-2.5 rounded-full bg-red-400"></span>
@@ -1600,6 +1590,13 @@
         renderActivePollUI(room.activePoll);
       }
 
+      // Odaya yeni girişte veya senkronda zamanı ve oynatma durumunu yakala
+      pendingInitialSync = {
+        time: (typeof room.currentTime === 'number' && !isNaN(room.currentTime)) ? room.currentTime : 0,
+        isPlaying: room.isPlaying !== undefined ? !!room.isPlaying : false
+      };
+      ignoreLocalEventsUntil = Date.now() + 3000;
+
       if (room.videoUrl) {
         loadVideoSource(room.videoUrl, false);
       } else {
@@ -1654,6 +1651,8 @@
     let ytPlayer = null;
     let isYtReady = false;
     let isSyncing = false;
+    let ignoreLocalEventsUntil = 0;
+    let pendingInitialSync = null;
     const html5Player = document.getElementById('html5Player');
     const youtubeWrapper = document.getElementById('youtubeWrapper');
     const twitchWrapper = document.getElementById('twitchWrapper');
@@ -1713,7 +1712,24 @@
 
       if (ytPlayer && typeof ytPlayer.loadVideoById === 'function') {
         try {
+          ignoreLocalEventsUntil = Date.now() + 2500;
           ytPlayer.loadVideoById(videoId);
+          if (pendingInitialSync) {
+            const { time, isPlaying } = pendingInitialSync;
+            pendingInitialSync = null;
+            setTimeout(() => {
+              if (ytPlayer && typeof ytPlayer.seekTo === 'function' && time > 0) {
+                ytPlayer.seekTo(time, true);
+              }
+              if (isPlaying) {
+                ytPlayer.playVideo();
+                playPauseBtn.textContent = '⏸';
+              } else {
+                ytPlayer.pauseVideo();
+                playPauseBtn.textContent = '▶';
+              }
+            }, 350);
+          }
           return;
         } catch (e) {
           console.warn('[YouTube] loadVideoById hatası, sıfırlanıyor:', e);
@@ -1743,7 +1759,21 @@
             onReady: (event) => {
               isYtReady = true;
               console.log('🎬 [YouTube] Oynatıcı Hazır:', videoId);
-              if (pendingYouTubeId && pendingYouTubeId !== videoId) {
+              if (pendingInitialSync) {
+                const { time, isPlaying } = pendingInitialSync;
+                pendingInitialSync = null;
+                ignoreLocalEventsUntil = Date.now() + 2500;
+                if (typeof event.target.seekTo === 'function' && time > 0) {
+                  event.target.seekTo(time, true);
+                }
+                if (isPlaying) {
+                  event.target.playVideo();
+                  playPauseBtn.textContent = '⏸';
+                } else {
+                  event.target.pauseVideo();
+                  playPauseBtn.textContent = '▶';
+                }
+              } else if (pendingYouTubeId && pendingYouTubeId !== videoId) {
                 event.target.loadVideoById(pendingYouTubeId);
               }
             },
@@ -1780,41 +1810,41 @@
     }
 
     function onYouTubeStateChange(event) {
-      if (isSyncing) return;
-      const overlay = document.getElementById('playOverlay');
+      if (Date.now() < ignoreLocalEventsUntil || isSyncing) return;
+
+      // Tamponlama (BUFFERING), CUED veya Başlamamış (-1) durumlarını yok say
+      if (event.data === YT.PlayerState.BUFFERING || event.data === YT.PlayerState.CUED || event.data === -1) {
+        return;
+      }
+
       if (event.data === YT.PlayerState.PLAYING) {
         playPauseBtn.textContent = '⏸';
-        if (overlay) overlay.classList.add('hidden');
-        socket.emit('video:play', { roomId: currentRoomId, currentTime: ytPlayer.getCurrentTime() });
+        const currentTime = ytPlayer && ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0;
+        socket.emit('video:play', { roomId: currentRoomId, currentTime });
       } else if (event.data === YT.PlayerState.PAUSED) {
         playPauseBtn.textContent = '▶';
-        if (overlay) overlay.classList.remove('hidden');
-        socket.emit('video:pause', { roomId: currentRoomId, currentTime: ytPlayer.getCurrentTime() });
+        const currentTime = ytPlayer && ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0;
+        socket.emit('video:pause', { roomId: currentRoomId, currentTime });
       } else if (event.data === YT.PlayerState.ENDED) {
         playPauseBtn.textContent = '▶';
-        if (overlay) overlay.classList.remove('hidden');
         if (isAutoplayEnabled) playNextInPlaylist();
       }
     }
 
     html5Player.addEventListener('play', () => {
-      if (isSyncing) return;
+      if (Date.now() < ignoreLocalEventsUntil || isSyncing) return;
       playPauseBtn.textContent = '⏸';
-      const overlay = document.getElementById('playOverlay');
-      if (overlay) overlay.classList.add('hidden');
       socket.emit('video:play', { roomId: currentRoomId, currentTime: html5Player.currentTime });
     });
 
     html5Player.addEventListener('pause', () => {
-      if (isSyncing || html5Player.seeking) return;
+      if (Date.now() < ignoreLocalEventsUntil || isSyncing || html5Player.seeking) return;
       playPauseBtn.textContent = '▶';
-      const overlay = document.getElementById('playOverlay');
-      if (overlay) overlay.classList.remove('hidden');
       socket.emit('video:pause', { roomId: currentRoomId, currentTime: html5Player.currentTime });
     });
 
     html5Player.addEventListener('seeked', () => {
-      if (isSyncing) return;
+      if (Date.now() < ignoreLocalEventsUntil || isSyncing) return;
       socket.emit('video:seek', { roomId: currentRoomId, currentTime: html5Player.currentTime });
     });
 
@@ -1866,13 +1896,24 @@
       let duration = currentVideoType === 'youtube' && ytPlayer && ytPlayer.getDuration ? ytPlayer.getDuration() : html5Player.duration;
       if (!duration) return;
       const targetTime = (progressBar.value / 100) * duration;
-      seekVideoTo(targetTime);
+      seekVideoTo(targetTime, true);
       socket.emit('video:seek', { roomId: currentRoomId, currentTime: targetTime });
     });
 
-    function seekVideoTo(time) {
-      if (currentVideoType === 'youtube' && isYtReady && ytPlayer && ytPlayer.seekTo) ytPlayer.seekTo(time, true);
-      else if (currentVideoType === 'direct') html5Player.currentTime = time;
+    function seekVideoTo(time, force = false) {
+      if (currentVideoType === 'youtube' && isYtReady && ytPlayer && typeof ytPlayer.seekTo === 'function') {
+        const current = ytPlayer.getCurrentTime ? ytPlayer.getCurrentTime() : 0;
+        const drift = Math.abs(current - time);
+        // Eğer zorlanmadıysa ve fark tolerans dahilindeyse (1.8 saniye) YouTube'u yeniden tamponlamaya zorlama
+        if (!force && drift < 1.8) return;
+        ignoreLocalEventsUntil = Date.now() + 1800;
+        ytPlayer.seekTo(time, true);
+      } else if (currentVideoType === 'direct') {
+        const drift = Math.abs(html5Player.currentTime - time);
+        if (!force && drift < 1.8) return;
+        ignoreLocalEventsUntil = Date.now() + 1800;
+        html5Player.currentTime = time;
+      }
     }
 
     function seekRelative(sec) {
@@ -1886,7 +1927,7 @@
         duration = html5Player.duration || 0;
       }
       const targetTime = Math.max(0, Math.min(duration || Infinity, current + sec));
-      seekVideoTo(targetTime);
+      seekVideoTo(targetTime, true);
       socket.emit('video:seek', { roomId: currentRoomId, currentTime: targetTime });
       showToast(`${sec > 0 ? '+' : ''}${sec} sn sarıldı ⏩`, 'info', 1500);
     }
@@ -1988,7 +2029,22 @@
         if (isYtReady && ytPlayer && typeof ytPlayer.pauseVideo === 'function') ytPlayer.pauseVideo();
         html5Player.src = url;
         html5Player.load();
-        html5Player.play().catch(e => console.log('Autoplay blocked by browser policy:', e));
+        if (pendingInitialSync) {
+          const { time, isPlaying } = pendingInitialSync;
+          pendingInitialSync = null;
+          html5Player.onloadedmetadata = () => {
+            if (time > 0) html5Player.currentTime = time;
+            if (isPlaying) {
+              html5Player.play().catch(e => console.log('Autoplay blocked by browser policy:', e));
+              playPauseBtn.textContent = '⏸';
+            } else {
+              html5Player.pause();
+              playPauseBtn.textContent = '▶';
+            }
+          };
+        } else {
+          html5Player.play().catch(e => console.log('Autoplay blocked by browser policy:', e));
+        }
       }
 
       if (broadcast) {
@@ -2004,26 +2060,48 @@
     // ========================================================
     // I. SOKET SENKRONİZASYONU
     // ========================================================
+    socket.on('room:initial_sync', (room) => {
+      if (currentRoomId && currentRoomId === room.id) {
+        pendingInitialSync = {
+          time: (typeof room.currentTime === 'number' && !isNaN(room.currentTime)) ? room.currentTime : 0,
+          isPlaying: room.isPlaying !== undefined ? !!room.isPlaying : false
+        };
+        ignoreLocalEventsUntil = Date.now() + 3000;
+        if (room.videoUrl && (!currentVideoType || (currentVideoType === 'youtube' && !isYtReady))) {
+          loadVideoSource(room.videoUrl, false);
+        } else if (pendingInitialSync) {
+          seekVideoTo(room.currentTime || 0, true);
+          if (room.isPlaying) {
+            if (currentVideoType === 'youtube' && isYtReady && ytPlayer && ytPlayer.playVideo) ytPlayer.playVideo();
+            else if (currentVideoType === 'direct') html5Player.play().catch(() => {});
+            playPauseBtn.textContent = '⏸';
+          }
+        }
+      }
+    });
+
     socket.on('video:source_updated', ({ videoUrl }) => {
       loadVideoSource(videoUrl, false);
       showToast('Oynatılan video değiştirildi 🎬', 'info');
     });
 
     socket.on('video:on_play', ({ currentTime }) => {
+      ignoreLocalEventsUntil = Date.now() + 2000;
       isSyncing = true;
-      seekVideoTo(currentTime);
+      seekVideoTo(currentTime, false);
       if (currentVideoType === 'youtube' && isYtReady && ytPlayer && typeof ytPlayer.playVideo === 'function') {
         ytPlayer.playVideo();
       } else if (currentVideoType === 'direct') {
-        html5Player.play();
+        html5Player.play().catch(e => console.log('Autoplay blocked:', e));
       }
       playPauseBtn.textContent = '⏸';
       setTimeout(() => isSyncing = false, 600);
     });
 
     socket.on('video:on_pause', ({ currentTime }) => {
+      ignoreLocalEventsUntil = Date.now() + 2000;
       isSyncing = true;
-      seekVideoTo(currentTime);
+      seekVideoTo(currentTime, false);
       if (currentVideoType === 'youtube' && isYtReady && ytPlayer && typeof ytPlayer.pauseVideo === 'function') {
         ytPlayer.pauseVideo();
       } else if (currentVideoType === 'direct') {
@@ -2034,9 +2112,34 @@
     });
 
     socket.on('video:on_seek', ({ currentTime }) => {
+      ignoreLocalEventsUntil = Date.now() + 2000;
       isSyncing = true;
-      seekVideoTo(currentTime);
+      seekVideoTo(currentTime, true);
       setTimeout(() => isSyncing = false, 600);
+    });
+
+    socket.on('video:heartbeat', ({ currentTime, isPlaying }) => {
+      if (Date.now() < ignoreLocalEventsUntil) return;
+
+      let localCurrent = 0;
+      if (currentVideoType === 'youtube' && isYtReady && ytPlayer && ytPlayer.getCurrentTime) {
+        localCurrent = ytPlayer.getCurrentTime() || 0;
+      } else if (currentVideoType === 'direct') {
+        localCurrent = html5Player.currentTime || 0;
+      }
+
+      const drift = Math.abs(localCurrent - currentTime);
+      // Fark 2.5 saniyeden fazlaysa sessizce hizala
+      if (drift > 2.5) {
+        console.log(`[Sync Heartbeat] Zaman farkı tespit edildi (${drift.toFixed(1)}s), eşitleniyor: ${currentTime.toFixed(1)}s`);
+        ignoreLocalEventsUntil = Date.now() + 2000;
+        seekVideoTo(currentTime, true);
+        if (isPlaying) {
+          if (currentVideoType === 'youtube' && isYtReady && ytPlayer && ytPlayer.playVideo) ytPlayer.playVideo();
+          else if (currentVideoType === 'direct') html5Player.play().catch(() => {});
+          playPauseBtn.textContent = '⏸';
+        }
+      }
     });
 
     socket.on('room:settings_updated', (settings) => {
