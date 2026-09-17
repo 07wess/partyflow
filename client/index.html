@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PartyFlow - Birlikte Sinema Odası</title>
+  <title>PartyFlow 2.0 - Çok Odalı Sosyal Sinema Platformu</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Socket.io -->
@@ -17,7 +17,7 @@
         transform: translate(0, 0) scale(0.8) rotate(0deg);
       }
       50% {
-        opacity: 0.9;
+        opacity: 0.95;
         transform: translate(calc(var(--rand-x) * 1px), -180px) scale(1.4) rotate(calc(var(--rand-r) * 1deg));
       }
       100% {
@@ -27,342 +27,776 @@
     }
     .floating-reaction {
       position: absolute;
-      bottom: 20px;
-      font-size: 2.75rem;
+      bottom: 24px;
+      font-size: 3rem;
       pointer-events: none;
       z-index: 40;
       animation: floatUp 2.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+      filter: drop-shadow(0 6px 16px rgba(0,0,0,0.6));
     }
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
+    /* Sinema Modu (Lights Off) */
+    body.cinema-mode #mainHeader,
+    body.cinema-mode #rightSidebar,
+    body.cinema-mode #videoTopBar,
+    body.cinema-mode #bottomControlBar {
+      opacity: 0.08;
+      transition: opacity 0.3s ease;
+    }
+    body.cinema-mode #mainHeader:hover,
+    body.cinema-mode #rightSidebar:hover,
+    body.cinema-mode #videoTopBar:hover,
+    body.cinema-mode #bottomControlBar:hover {
+      opacity: 1;
+    }
+    body.cinema-mode #videoContainer {
+      box-shadow: 0 0 100px -10px rgba(139, 92, 246, 0.35);
+    }
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: #09090b; }
     ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 9999px; }
     ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
   </style>
 </head>
-<body class="bg-zinc-950 text-zinc-100 h-screen w-screen flex flex-col overflow-hidden font-sans select-none">
+<body class="bg-[#09090b] text-zinc-100 h-screen w-screen flex flex-col overflow-hidden font-sans select-none antialiased">
 
-  <!-- 1. ÜST BAŞLIK & BİLGİ ÇUBUĞU -->
-  <header class="h-14 bg-zinc-900/90 border-b border-zinc-800 px-4 flex items-center justify-between flex-shrink-0 z-20 backdrop-blur-md">
-    <!-- Logo ve Durum -->
-    <div class="flex items-center gap-3">
-      <div class="flex items-center gap-1.5">
-        <span class="text-xl">🍿</span>
-        <span class="font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300 tracking-wider text-lg">PARTYFLOW</span>
-      </div>
-      <div id="statusBadge" class="text-[11px] bg-red-500/10 text-red-400 border border-red-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
-        <span class="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse"></span>
-        <span id="statusText">Bağlantı Yok</span>
-      </div>
-      <!-- Oda Bilgisi & Paylaşma -->
-      <div class="hidden sm:flex items-center bg-zinc-800/80 border border-zinc-700/50 rounded-lg px-2 py-1 text-xs gap-2">
-        <span class="text-zinc-400">Oda:</span>
-        <span id="roomNameDisplay" class="font-semibold text-purple-300">ask-yuvasi</span>
-        <button onclick="copyRoomLink()" class="text-zinc-400 hover:text-white transition" title="Davet Linkini Kopyala">📋</button>
-      </div>
-    </div>
-
-    <!-- Sağ Taraf: Mola Butonu & Discord Profil -->
-    <div class="flex items-center gap-3">
-      <!-- Mola Menüsü -->
-      <div class="relative">
-        <button id="breakMenuBtn" class="bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
-          <span>☕</span>
-          <span>Mola Ver</span>
-          <span class="text-[10px]">▼</span>
-        </button>
-        <div id="breakDropdown" class="hidden absolute right-0 mt-2 w-36 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl py-1 z-50 flex flex-col text-xs overflow-hidden">
-          <button onclick="startBreak(3)" class="px-3 py-2 hover:bg-zinc-800 text-left flex items-center gap-2">☕ 3 Dakika</button>
-          <button onclick="startBreak(5)" class="px-3 py-2 hover:bg-zinc-800 text-left flex items-center gap-2">🍿 5 Dakika</button>
-          <button onclick="startBreak(10)" class="px-3 py-2 hover:bg-zinc-800 text-left flex items-center gap-2">🍕 10 Dakika</button>
-        </div>
-      </div>
-
-      <!-- Discord Giriş veya Profil Rozeti -->
-      <div id="userProfileArea" class="flex items-center gap-2">
-        <div id="userBadge" class="flex items-center gap-2 bg-zinc-800/80 border border-zinc-700/60 rounded-full px-2.5 py-1 text-xs cursor-pointer hover:bg-zinc-700 transition" title="Kullanıcı adını değiştirmek için tıkla">
-          <img id="userAvatar" src="https://cdn.discordapp.com/embed/avatars/0.png" class="w-5 h-5 rounded-full object-cover" />
-          <span id="userName" class="font-medium text-zinc-200">Misafir</span>
-        </div>
-        <a id="discordLoginBtn" href="/auth/discord" class="bg-[#5865F2] hover:bg-[#4752C4] text-white px-3 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
-          <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
-          <span>Giriş Yap</span>
-        </a>
-      </div>
-    </div>
-  </header>
-
-  <!-- 2. ANA ALAN: VİDEO & SOHBET BÖLÜMÜ -->
-  <div class="flex-1 flex overflow-hidden">
+  <!-- ======================================================== -->
+  <!-- 1. GÖRÜNÜM: LOBİ VE ODA KEŞFİ (LOBBY DASHBOARD)         -->
+  <!-- ======================================================== -->
+  <div id="lobbyView" class="flex-1 flex flex-col overflow-hidden">
     
-    <!-- SOL: VİDEO VE ETKİLEŞİM PANELİ -->
-    <div class="flex-1 flex flex-col p-3 gap-2 min-w-0">
-      
-      <!-- Video URL Barı & Hızlı Örnekler -->
-      <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-2 flex flex-wrap items-center gap-2">
-        <div class="flex-1 flex items-center bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-1.5 focus-within:border-purple-500 transition min-w-[240px]">
-          <span class="text-zinc-500 mr-2 text-xs">🔗</span>
-          <input id="videoUrlInput" type="text" placeholder="YouTube linki veya doğrudan video (.mp4) adresi yapıştırın..." class="bg-transparent text-xs w-full outline-none text-white placeholder-zinc-500" />
+    <!-- Lobi Üst Barı -->
+    <header class="h-16 border-b border-zinc-800/80 px-6 flex items-center justify-between bg-zinc-950/60 backdrop-blur-xl flex-shrink-0 z-20">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 via-pink-600 to-amber-400 flex items-center justify-center text-xl shadow-lg shadow-purple-600/20">
+          🍿
         </div>
-        <button id="loadVideoBtn" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1 shadow-sm">
-          <span>Yükle</span>
-        </button>
-
-        <!-- Hızlı Örnek Düğmeleri -->
-        <div class="flex items-center gap-1.5 text-[11px] text-zinc-400">
-          <span>Örnekler:</span>
-          <button onclick="quickLoad('https://www.youtube.com/watch?v=jfKfPfyJRdk')" class="hover:text-purple-300 bg-zinc-800 px-2 py-0.5 rounded transition">🎵 Lofi</button>
-          <button onclick="quickLoad('https://www.youtube.com/watch?v=aqz-KE-bpKQ')" class="hover:text-purple-300 bg-zinc-800 px-2 py-0.5 rounded transition">🍿 Animasyon</button>
-          <button onclick="quickLoad('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')" class="hover:text-purple-300 bg-zinc-800 px-2 py-0.5 rounded transition">📽️ MP4</button>
-          <button onclick="quickLoad('https://www.twitch.tv/elraenn')" class="hover:text-purple-300 bg-zinc-800 px-2 py-0.5 rounded transition">🟣 Twitch</button>
+        <div>
+          <span class="font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300 tracking-wider text-xl">PARTYFLOW</span>
+          <span class="text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-1.5 py-0.2 rounded ml-1 font-semibold">2.0</span>
         </div>
       </div>
 
-      <!-- VİDEO OYNATICI ALANI (Kamerlar, Mola Perdesi, Uçuşan Emojiler) -->
-      <div id="videoContainer" class="relative flex-1 bg-black rounded-2xl border border-zinc-800 overflow-hidden flex items-center justify-center group shadow-2xl">
-        
-        <!-- 1. YouTube Oynatıcı Iframe Konteyneri -->
-        <div id="youtubeWrapper" class="w-full h-full">
-          <div id="youtubePlayer" class="w-full h-full"></div>
+      <div class="flex items-center gap-3">
+        <!-- Kullanıcı Profili -->
+        <div id="lobbyUserBadge" class="flex items-center gap-2 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 rounded-full px-3 py-1.5 text-xs cursor-pointer transition">
+          <img id="lobbyUserAvatar" src="https://cdn.discordapp.com/embed/avatars/0.png" class="w-5 h-5 rounded-full object-cover" />
+          <span id="lobbyUserName" class="font-semibold text-zinc-200">Misafir</span>
         </div>
 
-        <!-- 2. Doğrudan HTML5 Video Oynatıcı -->
-        <video id="html5Player" class="hidden w-full h-full object-contain" playsinline preload="auto"></video>
+        <a id="lobbyDiscordBtn" href="/auth/discord" class="bg-[#5865F2] hover:bg-[#4752C4] text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-md shadow-indigo-600/20">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+          <span>Discord Bağla</span>
+        </a>
 
-        <!-- 3. Twitch Canlı Yayın Iframe Konteyneri -->
-        <div id="twitchWrapper" class="hidden w-full h-full">
-          <iframe id="twitchPlayer" class="w-full h-full border-0" allowfullscreen></iframe>
-        </div>
+        <button onclick="openCreateRoomModal()" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-purple-600/30">
+          <span>+</span>
+          <span>Yeni Oda Aç</span>
+        </button>
+      </div>
+    </header>
 
-        <!-- 4. Canlı Ekran Paylaşımı Oynatıcısı (Netflix / Dizi / Masaüstü) -->
-        <video id="screenSharePlayer" class="hidden w-full h-full object-contain" autoplay playsinline></video>
-
-        <!-- Ekran Paylaşımı Bildirim Rozeti -->
-        <div id="screenShareBanner" class="hidden absolute top-3 left-3 bg-indigo-600/90 backdrop-blur-md text-white px-3 py-1.5 rounded-xl text-xs font-semibold z-30 flex items-center gap-2 shadow-2xl border border-indigo-400/40 animate-pulse">
-          <span class="w-2 h-2 rounded-full bg-red-400"></span>
-          <span id="screenShareBannerText">🖥️ Canlı Ekran Yayını Aktif (Netflix / Dizi)</span>
-          <button id="stopShareBannerBtn" onclick="stopScreenShare()" class="bg-black/50 hover:bg-black/80 px-2 py-0.5 rounded-lg text-[11px] transition text-zinc-200">Yayını Durdur</button>
-        </div>
-
-        <!-- 5. Uçuşan Reaksiyon Emojileri Katmanı -->
-        <div id="reactionsLayer" class="absolute inset-0 pointer-events-none overflow-hidden z-30"></div>
-
-        <!-- 6. Senkronize Mola Perdesi (Snack Break) -->
-        <div id="snackOverlay" class="hidden absolute inset-0 bg-black/90 backdrop-blur-md z-40 flex flex-col items-center justify-center text-center p-6 transition-all duration-300">
-          <div class="text-7xl animate-bounce mb-3">🍿🥤</div>
-          <h2 class="text-3xl font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-400 to-amber-200">Atıştırmalık Molası!</h2>
-          <p class="text-xs text-zinc-400 mt-1 max-w-sm">Video duraklatıldı. Süre bitince veya iptal edilince kaldığınız yerden birlikte devam edeceksiniz.</p>
-          <div id="snackCountdown" class="text-6xl font-black font-mono my-4 text-white tracking-widest bg-zinc-900/80 px-6 py-2 rounded-2xl border border-zinc-800 shadow-inner">
-            05:00
+    <!-- Lobi Ana İçeriği (Kaydırılabilir) -->
+    <main class="flex-1 overflow-y-auto px-6 py-8 max-w-7xl mx-auto w-full">
+      
+      <!-- Hero Banner -->
+      <div class="relative rounded-3xl bg-gradient-to-r from-purple-900/40 via-zinc-900/60 to-pink-900/30 border border-purple-500/20 p-8 sm:p-12 mb-10 overflow-hidden shadow-2xl backdrop-blur">
+        <div class="relative z-10 max-w-2xl">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-semibold mb-4">
+            <span class="w-2 h-2 rounded-full bg-purple-400 animate-pulse"></span>
+            Senkron Sosyal Sinema Platformu
           </div>
-          <button onclick="stopBreak()" class="text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 px-4 py-2 rounded-xl transition">
-            Molayı Bitir ve Devam Et ▶
+          <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-white leading-tight">
+            Arkadaşlarınla <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Aynı Anda</span> İzle, Eğlen, Paylaş.
+          </h1>
+          <p class="text-sm sm:text-base text-zinc-400 mt-4 leading-relaxed">
+            Mesafe fark etmeksizin; YouTube, film (MP4), Twitch ve WebRTC ekran paylaşımıyla Netflix içeriklerini sıfır gecikmeyle, görüntülü ve sesli sohbet eşliğinde izleyin.
+          </p>
+          <div class="mt-8 flex flex-wrap gap-3">
+            <button onclick="openCreateRoomModal()" class="bg-purple-600 hover:bg-purple-500 text-white px-6 py-3 rounded-2xl text-sm font-bold transition shadow-xl shadow-purple-600/30 flex items-center gap-2">
+              <span>🚀</span>
+              <span>Hemen Bir Oda Oluştur</span>
+            </button>
+            <button onclick="quickJoinPreset('sinema-salonu')" class="bg-zinc-800/80 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 px-5 py-3 rounded-2xl text-sm font-semibold transition">
+              🍿 Genel Sinema Salonuna Gir
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filtreler ve Arama -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div>
+          <h2 class="text-xl font-black text-zinc-100 flex items-center gap-2">
+            <span>🌐</span>
+            <span>Açık Sinema Odaları</span>
+          </h2>
+          <p class="text-xs text-zinc-400 mt-0.5">Şu an aktif olan odalara tek tıkla katılabilirsiniz.</p>
+        </div>
+
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <!-- Arama Inputu -->
+          <div class="flex items-center bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white w-full sm:w-64 focus-within:border-purple-500 transition">
+            <span class="text-zinc-500 mr-2">🔍</span>
+            <input id="roomSearchInput" oninput="filterRooms()" placeholder="Oda veya film ara..." class="bg-transparent outline-none w-full placeholder-zinc-500 text-xs" />
+          </div>
+
+          <!-- Yenile Butonu -->
+          <button onclick="fetchLobbyRooms()" class="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 p-2 rounded-xl text-zinc-400 hover:text-white transition" title="Odaları Yenile">
+            🔄
           </button>
         </div>
+      </div>
 
-        <!-- 5. Sol Alt Canlı Kamera & Ses Kutuları (WebRTC & PeerJS) -->
-        <div class="absolute bottom-3 left-3 z-30 flex gap-2">
-          <!-- Sen (Local Stream) -->
-          <div class="relative w-28 h-20 sm:w-36 sm:h-24 bg-zinc-900/90 border border-zinc-700/80 rounded-xl overflow-hidden shadow-xl backdrop-blur group/cam">
-            <video id="localVideo" autoplay muted playsinline class="w-full h-full object-cover"></video>
-            <div id="localCamPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900 text-zinc-400 text-[11px] gap-1">
-              <span>📷</span>
-              <span>Kamera Kapalı</span>
+      <!-- Aktif Odalar Izgarası (Grid) -->
+      <div id="roomsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <!-- Odalar Dinamik Olarak Buraya Dolacak -->
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 2. GÖRÜNÜM: SİNEMA ODASI (CINEMA THEATER VIEW)           -->
+  <!-- ======================================================== -->
+  <div id="cinemaView" class="hidden flex-1 flex flex-col overflow-hidden">
+    
+    <!-- Üst Çubuk (Oda Bilgisi & Eylemler) -->
+    <header id="mainHeader" class="h-14 bg-zinc-900/90 border-b border-zinc-800 px-4 flex items-center justify-between flex-shrink-0 z-20 backdrop-blur-md">
+      
+      <!-- Sol: Lobiye Dönüş & Oda Başlığı -->
+      <div class="flex items-center gap-3">
+        <button onclick="leaveRoomToLobby()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700/60 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5" title="Lobiye Geri Dön">
+          <span>←</span>
+          <span class="hidden sm:inline">Lobi</span>
+        </button>
+
+        <div class="flex items-center gap-2">
+          <span id="theaterRoomName" class="font-black text-white text-base tracking-wide">Sinema Odası</span>
+          <span id="theaterCategoryBadge" class="text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded-full font-semibold">Film</span>
+          <span id="theaterControlBadge" class="hidden md:inline text-[10px] bg-zinc-800 text-zinc-400 border border-zinc-700 px-2 py-0.5 rounded-full">Herkes Kontrol Edebilir</span>
+        </div>
+      </div>
+
+      <!-- Sağ: Oda Kontrolleri, Host Ayarları & Profil -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        
+        <!-- Işıkları Kapat (Sinema Modu) -->
+        <button onclick="toggleCinemaMode()" id="cinemaModeBtn" class="bg-zinc-800 hover:bg-zinc-700 text-amber-300 border border-zinc-700/80 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1" title="Işıkları Kapat / Sinema Modu">
+          <span>💡</span>
+          <span class="hidden md:inline">Sinema Modu</span>
+        </button>
+
+        <!-- Davet Linki Kopyala -->
+        <button onclick="copyRoomLink()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700/80 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5" title="Davet Bağlantısını Kopyala">
+          <span>📋</span>
+          <span class="hidden sm:inline">Davet Et</span>
+        </button>
+
+        <!-- Host Ayarları Butonu (Sadece Host Görür) -->
+        <button id="hostSettingsBtn" onclick="openHostSettingsModal()" class="hidden bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+          <span>👑</span>
+          <span>Oda Ayarları</span>
+        </button>
+
+        <!-- Atıştırmalık Molası Menüsü -->
+        <div class="relative">
+          <button id="breakMenuBtn" class="bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+            <span>🍿</span>
+            <span>Mola</span>
+            <span class="text-[10px]">▼</span>
+          </button>
+          <div id="breakDropdown" class="hidden absolute right-0 mt-2 w-36 bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl py-1 z-50 flex flex-col text-xs overflow-hidden">
+            <button onclick="startBreak(3)" class="px-3 py-2 hover:bg-zinc-800 text-left flex items-center gap-2">☕ 3 Dakika</button>
+            <button onclick="startBreak(5)" class="px-3 py-2 hover:bg-zinc-800 text-left flex items-center gap-2">🍿 5 Dakika</button>
+            <button onclick="startBreak(10)" class="px-3 py-2 hover:bg-zinc-800 text-left flex items-center gap-2">🍕 10 Dakika</button>
+          </div>
+        </div>
+
+        <!-- Kullanıcı Rozeti -->
+        <div id="theaterUserBadge" class="flex items-center gap-2 bg-zinc-800/90 border border-zinc-700/80 rounded-full px-2.5 py-1 text-xs cursor-pointer hover:bg-zinc-700 transition" title="Adınızı değiştirmek için tıklayın">
+          <img id="theaterUserAvatar" src="https://cdn.discordapp.com/embed/avatars/0.png" class="w-5 h-5 rounded-full object-cover" />
+          <span id="theaterUserName" class="font-medium text-zinc-200">Wesley</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Sinema Odası Ana İçeriği (Video + Sağ Panel) -->
+    <div class="flex-1 flex overflow-hidden">
+      
+      <!-- SOL: VİDEO, KONTROLLER VE KAMERALAR -->
+      <div class="flex-1 flex flex-col p-3 gap-2 min-w-0">
+        
+        <!-- Video URL Barı -->
+        <div id="videoTopBar" class="bg-zinc-900 border border-zinc-800 rounded-xl p-2 flex flex-wrap items-center gap-2">
+          <div class="flex-1 flex items-center bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-1.5 focus-within:border-purple-500 transition min-w-[240px]">
+            <span class="text-zinc-500 mr-2 text-xs">🔗</span>
+            <input id="videoUrlInput" type="text" placeholder="YouTube, MP4 film adresi veya Twitch linki yapıştırın..." class="bg-transparent text-xs w-full outline-none text-white placeholder-zinc-500" />
+          </div>
+          <button id="loadVideoBtn" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1 shadow-sm">
+            <span>Yükle</span>
+          </button>
+
+          <!-- Hızlı Seçenekler -->
+          <div class="hidden lg:flex items-center gap-1.5 text-[11px] text-zinc-400">
+            <span>Örnekler:</span>
+            <button onclick="quickLoad('https://www.youtube.com/watch?v=jfKfPfyJRdk')" class="hover:text-purple-300 bg-zinc-800 px-2 py-0.5 rounded transition">🎵 Lofi</button>
+            <button onclick="quickLoad('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4')" class="hover:text-purple-300 bg-zinc-800 px-2 py-0.5 rounded transition">📽️ Film Test</button>
+            <button onclick="quickLoad('https://www.twitch.tv/elraenn')" class="hover:text-purple-300 bg-zinc-800 px-2 py-0.5 rounded transition">🟣 Twitch</button>
+          </div>
+        </div>
+
+        <!-- VİDEO ALANI (AMBİLIGHT, OYNATICILAR, REAKSİYONLAR) -->
+        <div id="videoContainer" class="relative flex-1 bg-black rounded-2xl border border-zinc-800 overflow-hidden flex items-center justify-center group shadow-2xl transition-all duration-300">
+          
+          <!-- 1. YouTube Oynatıcı -->
+          <div id="youtubeWrapper" class="w-full h-full">
+            <div id="youtubePlayer" class="w-full h-full"></div>
+          </div>
+
+          <!-- 2. HTML5 Video Oynatıcı -->
+          <video id="html5Player" class="hidden w-full h-full object-contain" playsinline preload="auto"></video>
+
+          <!-- 3. Twitch Oynatıcı -->
+          <div id="twitchWrapper" class="hidden w-full h-full">
+            <iframe id="twitchPlayer" class="w-full h-full border-0" allowfullscreen></iframe>
+          </div>
+
+          <!-- 4. Ekran Paylaşımı Oynatıcısı (Netflix / Dizi) -->
+          <video id="screenSharePlayer" class="hidden w-full h-full object-contain" autoplay playsinline></video>
+
+          <!-- Ekran Paylaşımı Bildirimi -->
+          <div id="screenShareBanner" class="hidden absolute top-3 left-3 bg-indigo-600/95 backdrop-blur-md text-white px-3.5 py-1.5 rounded-xl text-xs font-semibold z-30 flex items-center gap-2 shadow-2xl border border-indigo-400/40 animate-pulse">
+            <span class="w-2 h-2 rounded-full bg-red-400"></span>
+            <span id="screenShareBannerText">🖥️ Canlı Ekran Yayını Aktif (Netflix / Dizi)</span>
+            <button id="stopShareBannerBtn" onclick="stopScreenShare()" class="bg-black/50 hover:bg-black/80 px-2 py-0.5 rounded-lg text-[11px] transition text-zinc-200">Yayını Durdur</button>
+          </div>
+
+          <!-- Uçuşan Reaksiyon Emojileri Katmanı -->
+          <div id="reactionsLayer" class="absolute inset-0 pointer-events-none overflow-hidden z-30"></div>
+
+          <!-- Mola Perdesi (Snack Break) -->
+          <div id="snackOverlay" class="hidden absolute inset-0 bg-black/90 backdrop-blur-md z-40 flex flex-col items-center justify-center text-center p-6 transition-all duration-300">
+            <div class="text-7xl animate-bounce mb-3">🍿🥤🍕</div>
+            <h2 class="text-3xl font-black tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-400 to-amber-200">Atıştırmalık & İçecek Molası!</h2>
+            <p class="text-xs text-zinc-400 mt-1 max-w-sm">Video duraklatıldı. Süre bitince veya iptal edilince kaldığınız yerden birlikte devam edeceksiniz.</p>
+            <div id="snackCountdown" class="text-6xl font-black font-mono my-4 text-white tracking-widest bg-zinc-900/80 px-6 py-2 rounded-2xl border border-zinc-800 shadow-inner">
+              05:00
             </div>
-            <!-- Rozet ve Kontroller -->
-            <div class="absolute bottom-1 left-1.5 right-1.5 flex justify-between items-center z-10 text-[10px] bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded-md">
-              <span class="truncate font-semibold text-purple-300">Sen</span>
-              <div class="flex gap-1">
-                <button id="toggleMicBtn" onclick="toggleMic()" class="hover:text-white" title="Mikrofon">🎙️</button>
-                <button id="toggleCamBtn" onclick="toggleCam()" class="hover:text-white" title="Kamera">📹</button>
+            <button onclick="stopBreak()" class="text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 px-4 py-2 rounded-xl transition">
+              Molayı Bitir ve Devam Et ▶
+            </button>
+          </div>
+
+          <!-- WebRTC Çoklu Kamera Izgarası (Sol Alt Şerit) -->
+          <div id="cameraGrid" class="absolute bottom-3 left-3 z-30 flex gap-2 max-w-[80%] overflow-x-auto pb-1">
+            <!-- Sen (Local Stream) -->
+            <div class="relative w-28 h-20 sm:w-36 sm:h-24 bg-zinc-900/90 border border-zinc-700/80 rounded-xl overflow-hidden shadow-xl backdrop-blur group/cam flex-shrink-0">
+              <video id="localVideo" autoplay muted playsinline class="w-full h-full object-cover"></video>
+              <div id="localCamPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900 text-zinc-400 text-[11px] gap-1">
+                <span>📷</span>
+                <span>Kamera Kapalı</span>
+              </div>
+              <div class="absolute bottom-1 left-1.5 right-1.5 flex justify-between items-center z-10 text-[10px] bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded-md">
+                <span class="truncate font-semibold text-purple-300">Sen</span>
+                <div class="flex gap-1">
+                  <button id="toggleMicBtn" onclick="toggleMic()" class="hover:text-white">🎙️</button>
+                  <button id="toggleCamBtn" onclick="toggleCam()" class="hover:text-white">📹</button>
+                </div>
               </div>
             </div>
+
+            <!-- Diğer Katılımcıların Kameraları Dinamik Eklenecektir -->
+            <div id="remoteCamerasContainer" class="flex gap-2"></div>
+          </div>
+        </div>
+
+        <!-- ALT KONTROL ÇUBUĞU, SOUNDBOARD & REAKSİYONLAR -->
+        <div id="bottomControlBar" class="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex flex-wrap items-center justify-between gap-4">
+          
+          <!-- Oynat/Durdur, İlerleme & Ekran Paylaşımı -->
+          <div class="flex items-center gap-3 flex-1 min-w-[280px]">
+            <button id="playPauseBtn" onclick="togglePlayPause()" class="bg-purple-600 hover:bg-purple-500 text-white w-10 h-10 rounded-xl flex items-center justify-center text-base transition shadow-md flex-shrink-0">
+              ▶
+            </button>
+
+            <!-- Ekran Paylaşımı (Netflix / Tab Stream) -->
+            <button id="screenShareBtn" onclick="toggleScreenShare()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-md flex-shrink-0" title="Netflix veya yan sekmeyi canlı yayınla">
+              <span id="screenShareBtnIcon">🖥️</span>
+              <span id="screenShareBtnText" class="hidden sm:inline">Ekran Paylaş</span>
+            </button>
+            
+            <div class="flex-1 flex flex-col gap-1">
+              <input id="progressBar" type="range" min="0" max="100" value="0" step="0.1" class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-purple-500 hover:h-2 transition-all" />
+              <div class="flex justify-between text-[11px] text-zinc-400 font-mono">
+                <span id="currentTimeDisplay">00:00</span>
+                <span id="durationDisplay">00:00</span>
+              </div>
+            </div>
+
+            <!-- Ses -->
+            <div class="hidden md:flex items-center gap-1.5 text-zinc-400">
+              <button onclick="toggleMute()" id="muteBtn" class="hover:text-white">🔊</button>
+              <input id="volumeBar" type="range" min="0" max="100" value="80" class="w-16 h-1 bg-zinc-800 rounded appearance-none cursor-pointer accent-purple-500" />
+            </div>
           </div>
 
-          <!-- Partner (Remote Stream) -->
-          <div class="relative w-28 h-20 sm:w-36 sm:h-24 bg-zinc-900/90 border border-zinc-700/80 rounded-xl overflow-hidden shadow-xl backdrop-blur">
-            <video id="remoteVideo" autoplay playsinline class="w-full h-full object-cover"></video>
-            <div id="remoteCamPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900 text-zinc-400 text-[11px] gap-1 text-center p-1">
-              <span>💕</span>
-              <span id="remoteStatusText">Partner Bekleniyor</span>
-            </div>
-            <div class="absolute bottom-1 left-1.5 text-[10px] bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded-md font-semibold text-pink-300">
-              <span id="partnerNameLabel">Partner</span>
-            </div>
+          <!-- Soundboard (Canlı Ses Efektleri) -->
+          <div class="hidden xl:flex items-center gap-1.5 bg-zinc-950 border border-zinc-800 px-2.5 py-1.5 rounded-xl text-xs text-zinc-300">
+            <span class="text-zinc-500 text-[10px] font-bold mr-1">SES:</span>
+            <button onclick="playSFX('applause')" class="hover:bg-zinc-800 px-1.5 py-0.5 rounded transition" title="Alkış">👏 Alkış</button>
+            <button onclick="playSFX('laugh')" class="hover:bg-zinc-800 px-1.5 py-0.5 rounded transition" title="Kahkaha">😂 Kahkaha</button>
+            <button onclick="playSFX('horn')" class="hover:bg-zinc-800 px-1.5 py-0.5 rounded transition" title="Havalı Korna">📢 Korna</button>
+            <button onclick="playSFX('popcorn')" class="hover:bg-zinc-800 px-1.5 py-0.5 rounded transition" title="Popcorn">🍿 Popcorn</button>
           </div>
+
+          <!-- 4 Ana Emoji Reaksiyonu -->
+          <div class="flex items-center gap-2 sm:gap-3 bg-zinc-950/80 border border-zinc-800 px-3 py-1.5 rounded-xl">
+            <button onclick="sendReaction('❤️')" class="text-2xl hover:scale-130 active:scale-90 transition transform" title="Aşk">❤️</button>
+            <button onclick="sendReaction('😂')" class="text-2xl hover:scale-130 active:scale-90 transition transform" title="Kahkaha">😂</button>
+            <button onclick="sendReaction('😭')" class="text-2xl hover:scale-130 active:scale-90 transition transform" title="Duygusal">😭</button>
+            <button onclick="sendReaction('😡')" class="text-2xl hover:scale-130 active:scale-90 transition transform" title="Kızgın">😡</button>
+          </div>
+
         </div>
       </div>
 
-      <!-- ALT KONTROL ÇUBUĞU & 4 EMOJİ REAKSİYONU -->
-      <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-3 flex items-center justify-between gap-4">
+      <!-- SAĞ: SEKME YAPISI (SOHBET / SIRADAKİLER / KATILIMCILAR) -->
+      <aside id="rightSidebar" class="w-80 sm:w-88 border-l border-zinc-800 bg-zinc-950 flex flex-col flex-shrink-0">
         
-        <!-- Oynat/Durdur & Zaman Takibi -->
-        <div class="flex items-center gap-3 flex-1">
-          <button id="playPauseBtn" onclick="togglePlayPause()" class="bg-purple-600 hover:bg-purple-500 text-white w-10 h-10 rounded-xl flex items-center justify-center text-base transition shadow-md flex-shrink-0">
-            ▶
-          </button>
-
-          <!-- Ekran Paylaşımı Butonu (Netflix / Dizi / Canlı Yayın) -->
-          <button id="screenShareBtn" onclick="toggleScreenShare()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-md flex-shrink-0" title="Netflix veya yan sekmeyi canlı yayınla">
-            <span id="screenShareBtnIcon">🖥️</span>
-            <span id="screenShareBtnText" class="hidden sm:inline">Ekran Paylaş</span>
-          </button>
-          
-          <div class="flex-1 flex flex-col gap-1">
-            <input id="progressBar" type="range" min="0" max="100" value="0" step="0.1" class="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-purple-500 hover:h-2 transition-all" />
-            <div class="flex justify-between text-[11px] text-zinc-400 font-mono">
-              <span id="currentTimeDisplay">00:00</span>
-              <span id="durationDisplay">00:00</span>
-            </div>
-          </div>
-
-          <!-- Ses Kontrolü -->
-          <div class="hidden md:flex items-center gap-1.5 text-zinc-400">
-            <button onclick="toggleMute()" id="muteBtn" class="hover:text-white">🔊</button>
-            <input id="volumeBar" type="range" min="0" max="100" value="80" class="w-16 h-1 bg-zinc-800 rounded appearance-none cursor-pointer accent-purple-500" />
+        <!-- Sekme Butonları -->
+        <div class="h-12 border-b border-zinc-800 px-2 flex items-center justify-between text-xs font-semibold bg-zinc-900/50">
+          <div class="flex gap-1">
+            <button onclick="switchSidebarTab('chat')" id="tabBtnChat" class="px-3 py-1.5 rounded-lg bg-purple-600 text-white transition">💬 Sohbet</button>
+            <button onclick="switchSidebarTab('playlist')" id="tabBtnPlaylist" class="px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition">📜 Sıra (<span id="playlistCount">0</span>)</button>
+            <button onclick="switchSidebarTab('users')" id="tabBtnUsers" class="px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition">👥 Üyeler (<span id="usersCount">1</span>)</button>
           </div>
         </div>
 
-        <!-- İstenen 4 Ana Reaksiyon Butonları (Uçuşan Efektler) -->
-        <div class="flex items-center gap-2 sm:gap-3 bg-zinc-950/70 border border-zinc-800 px-3 py-1.5 rounded-xl">
-          <button onclick="sendReaction('❤️')" class="text-2xl hover:scale-130 active:scale-90 transition transform" title="Aşk">❤️</button>
-          <button onclick="sendReaction('😂')" class="text-2xl hover:scale-130 active:scale-90 transition transform" title="Kahkaha">😂</button>
-          <button onclick="sendReaction('😭')" class="text-2xl hover:scale-130 active:scale-90 transition transform" title="Duygusal">😭</button>
-          <button onclick="sendReaction('😡')" class="text-2xl hover:scale-130 active:scale-90 transition transform" title="Kızgın">😡</button>
+        <!-- 1. SEKME: CANLI SOHBET -->
+        <div id="tabContentChat" class="flex-1 flex flex-col overflow-hidden">
+          <div id="messages" class="flex-1 overflow-y-auto p-3 space-y-3 text-xs"></div>
+          <div class="p-3 border-t border-zinc-800 bg-zinc-900/60">
+            <form id="chatForm" onsubmit="event.preventDefault(); sendMessage();" class="flex gap-2">
+              <input id="chatInput" autocomplete="off" placeholder="Odaya mesaj yazın..." class="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs outline-none focus:border-purple-500 text-white placeholder-zinc-500 transition" />
+              <button type="submit" class="bg-purple-600 hover:bg-purple-500 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition shadow-sm">
+                ➤
+              </button>
+            </form>
+          </div>
         </div>
 
+        <!-- 2. SEKME: OYNATMA LİSTESİ / QUEUE -->
+        <div id="tabContentPlaylist" class="hidden flex-1 flex flex-col overflow-hidden p-3">
+          <div class="mb-3">
+            <h3 class="text-xs font-bold text-zinc-300 mb-1">Sıradaki Videolar</h3>
+            <p class="text-[11px] text-zinc-500">Mevcut video bitince sıradaki otomatik başlar.</p>
+          </div>
+
+          <!-- Sıraya Ekle Formu -->
+          <div class="flex gap-2 mb-4">
+            <input id="playlistUrlInput" placeholder="Video URL'si ekle..." class="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-2.5 py-1.5 text-xs text-white outline-none focus:border-purple-500" />
+            <button onclick="addToPlaylist()" class="bg-purple-600 hover:bg-purple-500 px-3 py-1.5 rounded-xl text-xs font-bold text-white transition">
+              + Ekle
+            </button>
+          </div>
+
+          <!-- Liste -->
+          <div id="playlistItems" class="flex-1 overflow-y-auto space-y-2 text-xs"></div>
+        </div>
+
+        <!-- 3. SEKME: KATILIMCILAR & HOST YÖNETİMİ -->
+        <div id="tabContentUsers" class="hidden flex-1 flex flex-col overflow-hidden p-3">
+          <h3 class="text-xs font-bold text-zinc-300 mb-3">Odada Bulunanlar</h3>
+          <div id="usersList" class="flex-1 overflow-y-auto space-y-2 text-xs"></div>
+        </div>
+
+      </aside>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 3. MODALLAR (ODA OLUŞTURMA & HOST AYARLARI)               -->
+  <!-- ======================================================== -->
+
+  <!-- Yeni Oda Oluştur Modal -->
+  <div id="createRoomModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-md p-6 shadow-2xl relative">
+      <div class="flex justify-between items-center mb-5">
+        <h3 class="text-lg font-black text-white flex items-center gap-2">
+          <span>🍿</span>
+          <span>Yeni Sinema Odası Aç</span>
+        </h3>
+        <button onclick="closeCreateRoomModal()" class="text-zinc-500 hover:text-white text-lg">✕</button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block text-zinc-400 mb-1 font-semibold">Oda Adı</label>
+          <input id="newRoomName" placeholder="Örn: Marvel Film Gecesi" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 text-white outline-none focus:border-purple-500" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-zinc-400 mb-1 font-semibold">Kategori</label>
+            <select id="newRoomCategory" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 text-white outline-none focus:border-purple-500">
+              <option value="movie">🎬 Film & Dizi</option>
+              <option value="music">🎵 Müzik & Lofi</option>
+              <option value="anime">⛩️ Anime</option>
+              <option value="gaming">🎮 Oyun & Yayın</option>
+              <option value="general">🍿 Genel</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-zinc-400 mb-1 font-semibold">Kontrol Yetkisi</label>
+            <select id="newRoomControlMode" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 text-white outline-none focus:border-purple-500">
+              <option value="all">🤝 Herkes Kontrol Etsin</option>
+              <option value="host">👑 Sadece Ben (Host)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-zinc-400 mb-1 font-semibold">Oda Şifresi (İsteğe Bağlı)</label>
+          <input id="newRoomPassword" type="password" placeholder="Boş bırakırsanız herkese açık olur" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 text-white outline-none focus:border-purple-500" />
+        </div>
+
+        <div>
+          <label class="block text-zinc-400 mb-1 font-semibold">Başlangıç Video Linki (İsteğe Bağlı)</label>
+          <input id="newRoomVideo" placeholder="YouTube, MP4 veya Twitch linki" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 text-white outline-none focus:border-purple-500" />
+        </div>
+
+        <div class="pt-2">
+          <button onclick="submitCreateRoom()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-purple-600/30">
+            Odayı Başlat ve Katıl 🚀
+          </button>
+        </div>
       </div>
     </div>
+  </div>
 
-    <!-- SAĞ: CANLI SOHBET ALANI -->
-    <aside class="w-80 sm:w-88 border-l border-zinc-800 bg-zinc-950 flex flex-col flex-shrink-0">
+  <!-- Şifreli Odaya Katılma Modalı -->
+  <div id="passwordModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl relative text-center">
+      <span class="text-4xl mb-3 block">🔒</span>
+      <h3 class="text-base font-bold text-white mb-1">Bu Oda Şifrelidir</h3>
+      <p class="text-xs text-zinc-400 mb-4">Giriş yapabilmek için lütfen oda şifresini yazın.</p>
       
-      <!-- Sohbet Başlığı & Kullanıcı Sayısı -->
-      <div class="h-12 border-b border-zinc-800 px-4 flex items-center justify-between text-xs font-semibold">
-        <div class="flex items-center gap-2 text-zinc-200">
-          <span>💬</span>
-          <span>Canlı Sohbet</span>
-        </div>
-        <div class="flex items-center gap-1 text-[11px] text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
-          <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
-          <span id="userCount">1 Çevrimiçi</span>
-        </div>
+      <input id="roomPasswordInput" type="password" placeholder="Oda şifresi..." class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 text-white text-center outline-none focus:border-purple-500 text-xs mb-3" />
+      
+      <div class="flex gap-2">
+        <button onclick="closePasswordModal()" class="flex-1 bg-zinc-800 hover:bg-zinc-700 py-2.5 rounded-xl text-xs text-zinc-300 font-semibold transition">İptal</button>
+        <button onclick="submitPasswordJoin()" class="flex-1 bg-purple-600 hover:bg-purple-500 py-2.5 rounded-xl text-xs text-white font-bold transition">Giriş Yap</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Host Ayarları Modalı -->
+  <div id="hostSettingsModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-sm p-6 shadow-2xl relative">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-1.5">
+          <span>👑</span>
+          <span>Oda Sahibi Ayarları</span>
+        </h3>
+        <button onclick="closeHostSettingsModal()" class="text-zinc-500 hover:text-white">✕</button>
       </div>
 
-      <!-- Mesaj Listesi -->
-      <div id="messages" class="flex-1 overflow-y-auto p-3 space-y-3 text-xs"></div>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-zinc-400 mb-1 font-semibold">Video Oynatma Yetkisi</label>
+          <select id="editControlMode" class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2 text-white outline-none">
+            <option value="all">🤝 Herkes Kontrol Edebilsin</option>
+            <option value="host">👑 Sadece Ben (Host) Kontrol Edeyim</option>
+          </select>
+        </div>
 
-      <!-- Mesaj Gönderme Kutusu -->
-      <div class="p-3 border-t border-zinc-800 bg-zinc-900/60">
-        <form id="chatForm" onsubmit="event.preventDefault(); sendMessage();" class="flex gap-2">
-          <input id="chatInput" autocomplete="off" placeholder="Mesaj yazın..." class="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs outline-none focus:border-purple-500 text-white placeholder-zinc-500 transition" />
-          <button type="submit" class="bg-purple-600 hover:bg-purple-500 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition shadow-sm">
-            ➤
+        <div>
+          <label class="block text-zinc-400 mb-1 font-semibold">Yeni Oda Şifresi (Kaldırmak için boş bırakın)</label>
+          <input id="editRoomPassword" type="password" placeholder="Şifre belirleyin..." class="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2 text-white outline-none" />
+        </div>
+
+        <div class="pt-2">
+          <button onclick="saveHostSettings()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-2.5 rounded-xl transition">
+            Ayarları Kaydet
           </button>
-        </form>
+        </div>
       </div>
-
-    </aside>
+    </div>
   </div>
 
   <!-- YOUTUBE IFRAME API SCRIPT -->
   <script src="https://www.youtube.com/iframe_api"></script>
 
+  <!-- JAVASCRIPT LOGIC -->
   <script>
     // ========================================================
-    // 1. KULLANICI, ODA VE BAĞLANTI YÖNETİMİ
+    // 1. KULLANICI, ODA VE SOKET YÖNETİMİ
     // ========================================================
     const urlParams = new URLSearchParams(window.location.search);
-    const MY_ROOM = urlParams.get('room') || 'ask-yuvasi';
-    document.getElementById('roomNameDisplay').textContent = MY_ROOM;
-
+    
     // Discord OAuth2 Callback ile gelen veriyi yakala
     if (urlParams.get('user')) {
       localStorage.setItem('pf_username', urlParams.get('user'));
       if (urlParams.get('avatar')) localStorage.setItem('pf_avatar', urlParams.get('avatar'));
-      // URL'yi temizle
-      window.history.replaceState({}, document.title, window.location.pathname + `?room=${MY_ROOM}`);
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
 
     let MY_NAME = localStorage.getItem('pf_username') || 'Wesley';
     let MY_AVATAR = localStorage.getItem('pf_avatar') || 'https://cdn.discordapp.com/embed/avatars/0.png';
+    let currentRoomId = null;
+    let currentRoomData = null;
+    let pendingJoinRoomId = null;
+    let allPublicRooms = [];
 
     // Profil Arayüzünü Güncelle
-    const userNameEl = document.getElementById('userName');
-    const userAvatarEl = document.getElementById('userAvatar');
-    const userBadgeEl = document.getElementById('userBadge');
-    const discordLoginBtn = document.getElementById('discordLoginBtn');
-
     function updateProfileUI() {
-      userNameEl.textContent = MY_NAME;
-      userAvatarEl.src = MY_AVATAR;
+      document.getElementById('lobbyUserName').textContent = MY_NAME;
+      document.getElementById('theaterUserName').textContent = MY_NAME;
+      document.getElementById('lobbyUserAvatar').src = MY_AVATAR;
+      document.getElementById('theaterUserAvatar').src = MY_AVATAR;
+      
       if (localStorage.getItem('pf_username')) {
-        discordLoginBtn.innerHTML = `<span>✓ Bağlandı</span>`;
-        discordLoginBtn.className = "bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 rounded-lg text-xs font-semibold pointer-events-none";
+        document.getElementById('lobbyDiscordBtn').innerHTML = `<span>✓ Discord Bağlı</span>`;
+        document.getElementById('lobbyDiscordBtn').className = "bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 px-3.5 py-1.5 rounded-xl text-xs font-semibold pointer-events-none";
       }
     }
     updateProfileUI();
 
-    userBadgeEl.onclick = () => {
-      const newName = prompt('Görünecek adınızı değiştirin:', MY_NAME);
+    document.getElementById('lobbyUserBadge').onclick = changeUserNamePrompt;
+    document.getElementById('theaterUserBadge').onclick = changeUserNamePrompt;
+
+    function changeUserNamePrompt() {
+      const newName = prompt('Görünecek kullanıcı adınızı girin:', MY_NAME);
       if (newName && newName.trim()) {
         MY_NAME = newName.trim();
         localStorage.setItem('pf_username', MY_NAME);
         updateProfileUI();
-        socket.emit('room:join', { roomId: MY_ROOM, username: MY_NAME, avatar: MY_AVATAR, peerId: myPeerId });
+        if (currentRoomId) {
+          socket.emit('room:join', { roomId: currentRoomId, username: MY_NAME, avatar: MY_AVATAR, peerId: myPeerId });
+        }
       }
-    };
+    }
+
+    // Soket Bağlantısı
+    const socket = io(window.location.origin);
+
+    socket.on('connect', () => {
+      console.log('Soket bağlantısı kuruldu.');
+      socket.emit('lobby:get_rooms');
+
+      // Eğer URL'de doğrudan bir oda belirtilmişse oraya otomatik katıl
+      const directRoom = urlParams.get('room');
+      if (directRoom && !currentRoomId) {
+        joinRoom(directRoom);
+      }
+    });
+
+    socket.on('lobby:rooms_updated', (rooms) => {
+      allPublicRooms = rooms;
+      renderRoomsGrid(rooms);
+    });
+
+    // ========================================================
+    // 2. LOBİ & ODA LİSTELEME
+    // ========================================================
+    function fetchLobbyRooms() {
+      socket.emit('lobby:get_rooms');
+    }
+
+    function renderRoomsGrid(rooms) {
+      const grid = document.getElementById('roomsGrid');
+      grid.innerHTML = '';
+
+      if (rooms.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full py-16 text-center text-zinc-500">
+            <span class="text-4xl block mb-2">🍿</span>
+            <p>Şu an açık oda bulunmuyor. İlk odayı siz oluşturun!</p>
+          </div>
+        `;
+        return;
+      }
+
+      rooms.forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'bg-zinc-900/70 hover:bg-zinc-900 border border-zinc-800 hover:border-purple-500/50 rounded-2xl p-5 transition flex flex-col justify-between shadow-xl group';
+
+        const categoryIcons = {
+          movie: '🎬 Film & Dizi',
+          music: '🎵 Müzik & Lofi',
+          anime: '⛩️ Anime',
+          gaming: '🎮 Oyun & Yayın',
+          general: '🍿 Sinema'
+        };
+
+        card.innerHTML = `
+          <div>
+            <div class="flex justify-between items-start mb-3">
+              <span class="text-[10px] font-bold uppercase tracking-wider bg-purple-500/15 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded-full">
+                ${categoryIcons[r.category] || '🍿 Genel'}
+              </span>
+              <div class="flex items-center gap-1 text-[11px] text-zinc-400">
+                <span>${r.hasPassword ? '🔒 Şifreli' : '🌐 Açık'}</span>
+                <span>•</span>
+                <span class="text-emerald-400 font-semibold">${r.userCount} İzleyici</span>
+              </div>
+            </div>
+
+            <h3 class="text-base font-bold text-white group-hover:text-purple-300 transition mb-1 truncate">${escapeHtml(r.name)}</h3>
+            <p class="text-xs text-zinc-400 flex items-center gap-1 mb-4">
+              <span>👑 Oda Sahibi:</span>
+              <span class="text-zinc-200 font-medium">${escapeHtml(r.hostName || 'Host')}</span>
+            </p>
+          </div>
+
+          <div class="pt-3 border-t border-zinc-800/80 flex items-center justify-between">
+            <div class="flex items-center gap-1.5 text-xs text-zinc-400">
+              <span class="${r.isPlaying ? 'text-purple-400 animate-pulse' : 'text-zinc-500'}">●</span>
+              <span>${r.isPlaying ? 'Oynatılıyor' : 'Beklemede'}</span>
+            </div>
+            <button onclick="joinRoom('${r.id}', ${r.hasPassword})" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-1.5 rounded-xl text-xs font-bold transition shadow-sm">
+              Odaya Katıl →
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function filterRooms() {
+      const q = document.getElementById('roomSearchInput').value.toLowerCase().trim();
+      const filtered = allPublicRooms.filter(r => r.name.toLowerCase().includes(q) || r.category.toLowerCase().includes(q));
+      renderRoomsGrid(filtered);
+    }
+
+    function quickJoinPreset(roomId) {
+      joinRoom(roomId, false);
+    }
+
+    // Modal Yönetimi
+    function openCreateRoomModal() {
+      document.getElementById('createRoomModal').classList.remove('hidden');
+    }
+    function closeCreateRoomModal() {
+      document.getElementById('createRoomModal').classList.add('hidden');
+    }
+
+    function submitCreateRoom() {
+      const roomName = document.getElementById('newRoomName').value.trim() || 'Yeni Sinema Odası';
+      const category = document.getElementById('newRoomCategory').value;
+      const controlMode = document.getElementById('newRoomControlMode').value;
+      const password = document.getElementById('newRoomPassword').value;
+      const initialVideo = document.getElementById('newRoomVideo').value.trim();
+
+      socket.emit('room:create', {
+        roomName,
+        category,
+        controlMode,
+        password,
+        initialVideo,
+        username: MY_NAME,
+        avatar: MY_AVATAR
+      }, (res) => {
+        if (res.success) {
+          closeCreateRoomModal();
+          joinRoom(res.roomId, false, password);
+        }
+      });
+    }
+
+    // Odaya Katılma
+    function joinRoom(roomId, hasPassword = false, password = null) {
+      if (hasPassword && !password) {
+        pendingJoinRoomId = roomId;
+        document.getElementById('passwordModal').classList.remove('hidden');
+        return;
+      }
+
+      socket.emit('room:join', {
+        roomId,
+        username: MY_NAME,
+        avatar: MY_AVATAR,
+        peerId: myPeerId,
+        password: password || null
+      }, (res) => {
+        if (res.success) {
+          currentRoomId = roomId;
+          currentRoomData = res.room;
+          switchToCinemaView(res.room);
+        } else {
+          alert(res.error || 'Odaya katılınamadı!');
+        }
+      });
+    }
+
+    function closePasswordModal() {
+      document.getElementById('passwordModal').classList.add('hidden');
+      pendingJoinRoomId = null;
+    }
+
+    function submitPasswordJoin() {
+      const pwd = document.getElementById('roomPasswordInput').value;
+      const target = pendingJoinRoomId;
+      closePasswordModal();
+      if (target) joinRoom(target, true, pwd);
+    }
+
+    // Görünüm Değiştirici
+    function switchToCinemaView(room) {
+      document.getElementById('lobbyView').classList.add('hidden');
+      document.getElementById('cinemaView').classList.remove('hidden');
+
+      document.getElementById('theaterRoomName').textContent = room.name || room.id;
+      document.getElementById('theaterCategoryBadge').textContent = room.category || 'Genel';
+      document.getElementById('theaterControlBadge').textContent = room.controlMode === 'host' ? '👑 Sadece Host Kontrol Edebilir' : '🤝 Herkes Kontrol Edebilir';
+
+      // Eğer Host ise Host Ayarları butonunu göster
+      if (room.isHost) {
+        document.getElementById('hostSettingsBtn').classList.remove('hidden');
+      } else {
+        document.getElementById('hostSettingsBtn').classList.add('hidden');
+      }
+
+      // Playlist ve Katılımcıları doldur
+      updatePlaylistUI(room.playlist || [], room.currentPlaylistIndex || 0);
+      updateUsersListUI(room.users || []);
+
+      // Videoyu Yükle
+      if (room.videoUrl) {
+        loadVideoSource(room.videoUrl, false);
+      }
+    }
+
+    function leaveRoomToLobby() {
+      location.reload(); // Temiz bir şekilde lobiye dön
+    }
 
     function copyRoomLink() {
-      const link = `${window.location.origin}/?room=${encodeURIComponent(MY_ROOM)}`;
+      const link = `${window.location.origin}/?room=${encodeURIComponent(currentRoomId)}`;
       navigator.clipboard.writeText(link);
-      alert(`Oda bağlantısı kopyalandı:\n${link}\nPartnerinize gönderin!`);
+      alert(`Oda davet bağlantısı kopyalandı:\n${link}`);
     }
 
     // ========================================================
-    // 2. SOCKET.IO BAĞLANTISI
+    // 3. VİDEO OYNATICI (YOUTUBE, HTML5, TWITCH, EKRAN PAYLAŞIMI)
     // ========================================================
-    const socket = io(window.location.origin);
-    const statusBadge = document.getElementById('statusBadge');
-    const statusText = document.getElementById('statusText');
-
-    socket.on('connect', () => {
-      statusBadge.className = 'text-[11px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full flex items-center gap-1';
-      statusText.textContent = 'Bağlandı';
-      socket.emit('room:join', {
-        roomId: MY_ROOM,
-        username: MY_NAME,
-        avatar: MY_AVATAR,
-        peerId: myPeerId
-      });
-    });
-
-    socket.on('disconnect', () => {
-      statusBadge.className = 'text-[11px] bg-red-500/15 text-red-400 border border-red-500/30 px-2 py-0.5 rounded-full flex items-center gap-1';
-      statusText.textContent = 'Bağlantı Kesildi';
-    });
-
-    socket.on('room:users_updated', (users) => {
-      document.getElementById('userCount').textContent = `${users.length} Çevrimiçi`;
-    });
-
-    // ========================================================
-    // 3. VİDEO OYNATICI (YOUTUBE & HTML5 MP4) SENKRONİZASYONU
-    // ========================================================
-    let currentVideoType = 'youtube'; // 'youtube' veya 'direct'
+    let currentVideoType = 'youtube';
     let ytPlayer = null;
     let isYtReady = false;
-    let isSyncing = false; // Sonsuz döngü tetiklenmesini engelleyen kilit bayrağı
+    let isSyncing = false;
     const html5Player = document.getElementById('html5Player');
     const youtubeWrapper = document.getElementById('youtubeWrapper');
+    const twitchWrapper = document.getElementById('twitchWrapper');
+    const twitchPlayer = document.getElementById('twitchPlayer');
+    const screenSharePlayer = document.getElementById('screenSharePlayer');
+    const screenShareBanner = document.getElementById('screenShareBanner');
     const playPauseBtn = document.getElementById('playPauseBtn');
     const progressBar = document.getElementById('progressBar');
     const currentTimeDisplay = document.getElementById('currentTimeDisplay');
     const durationDisplay = document.getElementById('durationDisplay');
     const volumeBar = document.getElementById('volumeBar');
 
-    // YouTube Video ID Çıkarıcı
     function extractYouTubeId(url) {
       if (!url) return null;
       const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
@@ -370,22 +804,14 @@
       return (match && match[2].length === 11) ? match[2] : null;
     }
 
-    // YouTube API Hazır Olduğunda
     window.onYouTubeIframeAPIReady = function() {
       ytPlayer = new YT.Player('youtubePlayer', {
         height: '100%',
         width: '100%',
-        videoId: 'jfKfPfyJRdk', // Default Lofi Beats
-        playerVars: {
-          autoplay: 0,
-          controls: 0, // Kendi ortak kontrollerimizle yöneteceğiz
-          modestbranding: 1,
-          rel: 0
-        },
+        videoId: 'jfKfPfyJRdk',
+        playerVars: { autoplay: 0, controls: 0, modestbranding: 1, rel: 0 },
         events: {
-          onReady: () => {
-            isYtReady = true;
-          },
+          onReady: () => { isYtReady = true; },
           onStateChange: onYouTubeStateChange
         }
       });
@@ -393,39 +819,35 @@
 
     function onYouTubeStateChange(event) {
       if (isSyncing) return;
-
       if (event.data === YT.PlayerState.PLAYING) {
         playPauseBtn.textContent = '⏸';
-        socket.emit('video:play', { roomId: MY_ROOM, currentTime: ytPlayer.getCurrentTime() });
+        socket.emit('video:play', { roomId: currentRoomId, currentTime: ytPlayer.getCurrentTime() });
       } else if (event.data === YT.PlayerState.PAUSED) {
         playPauseBtn.textContent = '▶';
-        socket.emit('video:pause', { roomId: MY_ROOM, currentTime: ytPlayer.getCurrentTime() });
+        socket.emit('video:pause', { roomId: currentRoomId, currentTime: ytPlayer.getCurrentTime() });
       }
     }
 
-    // HTML5 Player Olayları
     html5Player.addEventListener('play', () => {
       if (isSyncing) return;
       playPauseBtn.textContent = '⏸';
-      socket.emit('video:play', { roomId: MY_ROOM, currentTime: html5Player.currentTime });
+      socket.emit('video:play', { roomId: currentRoomId, currentTime: html5Player.currentTime });
     });
 
     html5Player.addEventListener('pause', () => {
       if (isSyncing || html5Player.seeking) return;
       playPauseBtn.textContent = '▶';
-      socket.emit('video:pause', { roomId: MY_ROOM, currentTime: html5Player.currentTime });
+      socket.emit('video:pause', { roomId: currentRoomId, currentTime: html5Player.currentTime });
     });
 
     html5Player.addEventListener('seeked', () => {
       if (isSyncing) return;
-      socket.emit('video:seek', { roomId: MY_ROOM, currentTime: html5Player.currentTime });
+      socket.emit('video:seek', { roomId: currentRoomId, currentTime: html5Player.currentTime });
     });
 
-    // Zamanlayıcı Döngüsü (Progress Bar & Süre Güncelleme)
     setInterval(() => {
       let current = 0;
       let duration = 0;
-
       if (currentVideoType === 'youtube' && isYtReady && ytPlayer && ytPlayer.getCurrentTime) {
         current = ytPlayer.getCurrentTime() || 0;
         duration = ytPlayer.getDuration() || 0;
@@ -441,73 +863,52 @@
       durationDisplay.textContent = formatTime(duration);
     }, 500);
 
-    function formatTime(seconds) {
-      const m = Math.floor(seconds / 60);
-      const s = Math.floor(seconds % 60);
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
       return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     }
 
-    // İlerleme Çubuğu ile Sarma (Seek)
     progressBar.addEventListener('change', () => {
       let duration = currentVideoType === 'youtube' ? ytPlayer.getDuration() : html5Player.duration;
       if (!duration) return;
       const targetTime = (progressBar.value / 100) * duration;
       seekVideoTo(targetTime);
-      socket.emit('video:seek', { roomId: MY_ROOM, currentTime: targetTime });
+      socket.emit('video:seek', { roomId: currentRoomId, currentTime: targetTime });
     });
 
     function seekVideoTo(time) {
-      if (currentVideoType === 'youtube' && isYtReady) {
-        ytPlayer.seekTo(time, true);
-      } else if (currentVideoType === 'direct') {
-        html5Player.currentTime = time;
-      }
+      if (currentVideoType === 'youtube' && isYtReady) ytPlayer.seekTo(time, true);
+      else if (currentVideoType === 'direct') html5Player.currentTime = time;
     }
 
-    // Play / Pause Toggle
     function togglePlayPause() {
       if (currentVideoType === 'youtube' && isYtReady) {
         const state = ytPlayer.getPlayerState();
-        if (state === YT.PlayerState.PLAYING) {
-          ytPlayer.pauseVideo();
-        } else {
-          ytPlayer.playVideo();
-        }
+        if (state === YT.PlayerState.PLAYING) ytPlayer.pauseVideo();
+        else ytPlayer.playVideo();
       } else if (currentVideoType === 'direct') {
-        if (html5Player.paused) {
-          html5Player.play();
-        } else {
-          html5Player.pause();
-        }
+        if (html5Player.paused) html5Player.play();
+        else html5Player.pause();
       }
     }
 
-    // Ses ve Sessize Alma
     volumeBar.addEventListener('input', (e) => {
       const vol = e.target.value;
-      if (currentVideoType === 'youtube' && isYtReady) {
-        ytPlayer.setVolume(vol);
-      } else {
-        html5Player.volume = vol / 100;
-      }
+      if (currentVideoType === 'youtube' && isYtReady) ytPlayer.setVolume(vol);
+      else html5Player.volume = vol / 100;
     });
 
     function toggleMute() {
       if (currentVideoType === 'youtube' && isYtReady) {
-        if (ytPlayer.isMuted()) {
-          ytPlayer.unMute();
-          document.getElementById('muteBtn').textContent = '🔊';
-        } else {
-          ytPlayer.mute();
-          document.getElementById('muteBtn').textContent = '🔇';
-        }
+        if (ytPlayer.isMuted()) { ytPlayer.unMute(); document.getElementById('muteBtn').textContent = '🔊'; }
+        else { ytPlayer.mute(); document.getElementById('muteBtn').textContent = '🔇'; }
       } else {
         html5Player.muted = !html5Player.muted;
         document.getElementById('muteBtn').textContent = html5Player.muted ? '🔇' : '🔊';
       }
     }
 
-    // Video Kaynağı Değiştirme
     document.getElementById('loadVideoBtn').onclick = () => {
       const url = document.getElementById('videoUrlInput').value.trim();
       if (!url) return;
@@ -519,11 +920,6 @@
       loadVideoSource(url, true);
     }
 
-    const twitchWrapper = document.getElementById('twitchWrapper');
-    const twitchPlayer = document.getElementById('twitchPlayer');
-    const screenSharePlayer = document.getElementById('screenSharePlayer');
-    const screenShareBanner = document.getElementById('screenShareBanner');
-
     function loadVideoSource(url, broadcast = false) {
       hideScreenShareUI();
       const ytId = extractYouTubeId(url);
@@ -534,7 +930,6 @@
         html5Player.classList.add('hidden');
         twitchWrapper.classList.add('hidden');
         html5Player.pause();
-
         if (isYtReady && ytPlayer) {
           ytPlayer.loadVideoById(ytId);
           ytPlayer.pauseVideo();
@@ -546,8 +941,6 @@
         twitchWrapper.classList.remove('hidden');
         if (isYtReady && ytPlayer) ytPlayer.pauseVideo();
         html5Player.pause();
-
-        // Kanal adını çıkar
         const channel = url.split('twitch.tv/')[1].split('/')[0].split('?')[0];
         twitchPlayer.src = `https://player.twitch.tv/?channel=${channel}&parent=${window.location.hostname || 'localhost'}&autoplay=true`;
       } else {
@@ -556,14 +949,13 @@
         twitchWrapper.classList.add('hidden');
         html5Player.classList.remove('hidden');
         if (isYtReady && ytPlayer) ytPlayer.pauseVideo();
-
         html5Player.src = url;
         html5Player.load();
       }
 
       if (broadcast) {
         socket.emit('video:change_source', {
-          roomId: MY_ROOM,
+          roomId: currentRoomId,
           videoUrl: url,
           videoType: currentVideoType
         });
@@ -571,28 +963,8 @@
     }
 
     // ========================================================
-    // 4. SOKET SENKRONİZASYON DİNLEYİCİLERİ
+    // 4. SOKET SENKRONİZASYONU
     // ========================================================
-    // İlk Katılışta Odanın Güncel Durumunu Al
-    socket.on('room:initial_sync', (state) => {
-      if (state.videoUrl) {
-        loadVideoSource(state.videoUrl, false);
-      }
-      setTimeout(() => {
-        if (state.currentTime) seekVideoTo(state.currentTime);
-        if (state.isPlaying) {
-          if (currentVideoType === 'youtube' && isYtReady) ytPlayer.playVideo();
-          else if (currentVideoType === 'direct') html5Player.play();
-          playPauseBtn.textContent = '⏸';
-        }
-      }, 1000);
-
-      if (state.snackBreak) {
-        snackOverlay.classList.remove('hidden');
-        updateTimerDisplay(state.breakTimer || 0);
-      }
-    });
-
     socket.on('video:source_updated', ({ videoUrl }) => {
       loadVideoSource(videoUrl, false);
     });
@@ -621,8 +993,23 @@
       setTimeout(() => isSyncing = false, 600);
     });
 
+    socket.on('room:settings_updated', (settings) => {
+      document.getElementById('theaterControlBadge').textContent = settings.controlMode === 'host' ? '👑 Sadece Host Kontrol Edebilir' : '🤝 Herkes Kontrol Edebilir';
+    });
+
+    socket.on('host:changed', ({ hostId, hostName }) => {
+      if (hostId === socket.id) {
+        document.getElementById('hostSettingsBtn').classList.remove('hidden');
+      }
+    });
+
+    socket.on('room:kicked', ({ message }) => {
+      alert(message || 'Odadan çıkarıldınız.');
+      location.reload();
+    });
+
     // ========================================================
-    // 5. ATISTIRMALIK MOLASI (SNACK BREAK) MANTIĞI
+    // 5. ATISTIRMALIK MOLASI (SNACK BREAK)
     // ========================================================
     const breakMenuBtn = document.getElementById('breakMenuBtn');
     const breakDropdown = document.getElementById('breakDropdown');
@@ -633,7 +1020,7 @@
 
     function startBreak(mins) {
       breakDropdown.classList.add('hidden');
-      socket.emit('snack:start', { roomId: MY_ROOM, duration: mins * 60 });
+      socket.emit('snack:start', { roomId: currentRoomId, duration: mins * 60 });
     }
 
     socket.on('snack:started', ({ duration }) => {
@@ -651,19 +1038,19 @@
 
     function updateTimerDisplay(sec) {
       const m = Math.floor(sec / 60);
-      const s = sec % 60;
+      const s = Math.floor(sec % 60);
       snackCountdown.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     }
 
     function stopBreak() {
-      socket.emit('snack:stop', { roomId: MY_ROOM });
+      socket.emit('snack:stop', { roomId: currentRoomId });
     }
 
     // ========================================================
-    // 6. UÇUŞAN EMOJİ REAKSİYONLARI (❤️, 😂, 😭, 😡)
+    // 6. UÇUŞAN EMOJİ REAKSİYONLARI & SOUNDBOARD SFX
     // ========================================================
     function sendReaction(type) {
-      socket.emit('reaction:trigger', { roomId: MY_ROOM, type, sender: MY_NAME });
+      socket.emit('reaction:trigger', { roomId: currentRoomId, type, sender: MY_NAME });
     }
 
     socket.on('reaction:broadcast', ({ type }) => {
@@ -676,7 +1063,6 @@
       el.className = 'floating-reaction';
       el.textContent = emoji;
 
-      // Rastgele X konumu (Video genişliğinin %20'si ile %80'i arası)
       const randomLeft = Math.floor(Math.random() * 60) + 20;
       const randX = (Math.random() - 0.5) * 120;
       const randR = (Math.random() - 0.5) * 45;
@@ -689,19 +1075,70 @@
       setTimeout(() => el.remove(), 2300);
     }
 
+    // Web Audio Soundboard (Harici MP3 gerektirmeyen anlık sentetik sesler)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSFX(type) {
+      socket.emit('sfx:trigger', { roomId: currentRoomId, sound: type });
+      playLocalAudioEffect(type);
+    }
+
+    socket.on('sfx:play', ({ sound }) => {
+      playLocalAudioEffect(sound);
+    });
+
+    function playLocalAudioEffect(type) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'horn') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(320, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(450, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.6);
+      } else if (type === 'applause' || type === 'popcorn') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.4);
+      } else if (type === 'laugh') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.linearRampToValueAtTime(400, audioCtx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.5);
+      }
+    }
+
+    // Sinema Modu (Işıkları Kapat)
+    function toggleCinemaMode() {
+      document.body.classList.toggle('cinema-mode');
+      const isCinema = document.body.classList.contains('cinema-mode');
+      document.getElementById('cinemaModeBtn').className = isCinema
+        ? "bg-amber-500 text-black px-2.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-lg shadow-amber-500/30"
+        : "bg-zinc-800 hover:bg-zinc-700 text-amber-300 border border-zinc-700/80 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1";
+    }
+
     // ========================================================
-    // 7. CANLI KAMERA & SES (WEBRTC & PEERJS) & EKRAN PAYLAŞIMI
+    // 7. WEBRTC KAMERA & SES & EKRAN PAYLAŞIMI
     // ========================================================
     let myPeerId = null;
-    let partnerPeerId = null;
     let localStream = null;
     let localScreenStream = null;
     let peer = null;
     const localVideo = document.getElementById('localVideo');
-    const remoteVideo = document.getElementById('remoteVideo');
     const localCamPlaceholder = document.getElementById('localCamPlaceholder');
-    const remoteCamPlaceholder = document.getElementById('remoteCamPlaceholder');
-    const partnerNameLabel = document.getElementById('partnerNameLabel');
+    const remoteCamerasContainer = document.getElementById('remoteCamerasContainer');
 
     async function initWebRTC() {
       try {
@@ -709,11 +1146,10 @@
         localVideo.srcObject = localStream;
         localCamPlaceholder.classList.add('hidden');
       } catch (err) {
-        console.warn('Kamera/Mikrofon izni alınamadı veya cihaz bulunamadı:', err.message);
+        console.warn('Kamera/Mikrofon izni alınamadı:', err.message);
         localCamPlaceholder.classList.remove('hidden');
       }
 
-      // PeerJS Sinyal Sunucusuna Bağlan (Port 5000 /peerjs)
       peer = new Peer(undefined, {
         host: window.location.hostname,
         port: window.location.port || 5000,
@@ -722,126 +1158,95 @@
 
       peer.on('open', (id) => {
         myPeerId = id;
-        socket.emit('peer:update', { roomId: MY_ROOM, peerId: id });
+        if (currentRoomId) socket.emit('peer:update', { roomId: currentRoomId, peerId: id });
       });
 
-      // Gelen Görüntülü Arama (Kamera veya Ekran Paylaşımı)
       peer.on('call', (call) => {
         if (call.metadata && call.metadata.type === 'screenshare') {
-          call.answer(); // Ekran yayınını alırken kendi kameramızı göndermemize gerek yok
+          call.answer();
           call.on('stream', (remoteScreenStream) => {
             showRemoteScreenShare(remoteScreenStream);
           });
         } else {
           call.answer(localStream);
-          call.on('stream', (remoteCamStream) => {
-            remoteVideo.srcObject = remoteCamStream;
-            remoteCamPlaceholder.classList.add('hidden');
+          call.on('stream', (remoteStream) => {
+            addRemoteCamera(call.peer, remoteStream);
           });
         }
       });
-
-      peer.on('error', (err) => console.warn('PeerJS Uyarısı:', err));
     }
 
-    // Odaya yeni biri girdiğinde veya peer güncellendiğinde ara
-    socket.on('user:joined', ({ username, peerId }) => {
-      partnerNameLabel.textContent = username || 'Partner';
-      if (peerId) {
-        partnerPeerId = peerId;
-        if (localStream && peer) {
-          const call = peer.call(peerId, localStream);
-          if (call) {
-            call.on('stream', (remoteStream) => {
-              remoteVideo.srcObject = remoteStream;
-              remoteCamPlaceholder.classList.add('hidden');
-            });
-          }
-        }
-        // Eğer şu an biz ekran paylaşıyorsak yeni katılan partnere de yayını gönder
-        if (localScreenStream && peer) {
+    function addRemoteCamera(peerId, stream) {
+      let box = document.getElementById(`cam-${peerId}`);
+      if (!box) {
+        box = document.createElement('div');
+        box.id = `cam-${peerId}`;
+        box.className = 'relative w-28 h-20 sm:w-36 sm:h-24 bg-zinc-900/90 border border-zinc-700/80 rounded-xl overflow-hidden shadow-xl backdrop-blur flex-shrink-0';
+        box.innerHTML = `
+          <video autoplay playsinline class="w-full h-full object-cover"></video>
+          <div class="absolute bottom-1 left-1.5 text-[10px] bg-black/60 backdrop-blur-sm px-1.5 py-0.5 rounded-md font-semibold text-pink-300">İzleyici</div>
+        `;
+        remoteCamerasContainer.appendChild(box);
+      }
+      const vid = box.querySelector('video');
+      vid.srcObject = stream;
+    }
+
+    socket.on('user:joined', ({ peerId, users }) => {
+      updateUsersListUI(users);
+      if (peerId && localStream && peer) {
+        const call = peer.call(peerId, localStream);
+        if (call) call.on('stream', (st) => addRemoteCamera(peerId, st));
+        if (localScreenStream) {
           peer.call(peerId, localScreenStream, { metadata: { type: 'screenshare' } });
         }
       }
     });
 
-    socket.on('peer:updated', ({ peerId }) => {
-      if (peerId) {
-        partnerPeerId = peerId;
-        if (localStream && peer) {
-          const call = peer.call(peerId, localStream);
-          if (call) {
-            call.on('stream', (remoteStream) => {
-              remoteVideo.srcObject = remoteStream;
-              remoteCamPlaceholder.classList.add('hidden');
-            });
-          }
-        }
-      }
+    socket.on('user:left', ({ peerId, users }) => {
+      updateUsersListUI(users);
+      const box = document.getElementById(`cam-${peerId}`);
+      if (box) box.remove();
     });
 
-    socket.on('user:left', () => {
-      remoteCamPlaceholder.classList.remove('hidden');
-      document.getElementById('remoteStatusText').textContent = 'Partner Ayrıldı';
-      remoteVideo.srcObject = null;
-      partnerPeerId = null;
-    });
-
-    // ========================================================
-    // EKRAN PAYLAŞIMI (NETFLİX, DİZİ, YAN SEKME CANLI YAYINI)
-    // ========================================================
+    // Ekran Paylaşımı (Netflix / Tab Stream)
     async function toggleScreenShare() {
-      if (localScreenStream) {
-        stopScreenShare();
-      } else {
-        await startScreenShare();
-      }
+      if (localScreenStream) stopScreenShare();
+      else await startScreenShare();
     }
 
     async function startScreenShare() {
       try {
-        localScreenStream = await navigator.mediaDevices.getDisplayMedia({
-          video: { cursor: 'always' },
-          audio: true // Sekme sesini (Netflix sesi) de ilet
-        });
-
-        // Kendi ekranımızda oynatıcıyı ekran yayınına al
+        localScreenStream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: 'always' }, audio: true });
         showLocalScreenShare(localScreenStream);
+        socket.emit('screenshare:start', { roomId: currentRoomId });
 
-        // Soket ile odaya bildir
-        socket.emit('screenshare:start', { roomId: MY_ROOM });
-
-        // Partnere PeerJS ile ekran akışını ilet
-        if (partnerPeerId && peer) {
-          peer.call(partnerPeerId, localScreenStream, { metadata: { type: 'screenshare' } });
+        // Odaya yayını gönder
+        if (currentRoomData && currentRoomData.users) {
+          currentRoomData.users.forEach(u => {
+            if (u.peerId && u.peerId !== myPeerId && peer) {
+              peer.call(u.peerId, localScreenStream, { metadata: { type: 'screenshare' } });
+            }
+          });
         }
 
-        // Tarayıcının kendi "Paylaşımı Durdur" butonuna basılırsa
-        localScreenStream.getVideoTracks()[0].onended = () => {
-          stopScreenShare();
-        };
+        localScreenStream.getVideoTracks()[0].onended = () => stopScreenShare();
 
-        // Buton görünümünü güncelle
         document.getElementById('screenShareBtn').classList.replace('bg-indigo-600', 'bg-red-600');
-        document.getElementById('screenShareBtn').classList.replace('hover:bg-indigo-500', 'hover:bg-red-500');
         document.getElementById('screenShareBtnText').textContent = 'Yayını Durdur';
-
       } catch (err) {
-        console.warn('Ekran paylaşımı başlatılamadı:', err.message);
+        console.warn('Ekran paylaşımı iptal edildi:', err.message);
       }
     }
 
     function stopScreenShare() {
       if (localScreenStream) {
-        localScreenStream.getTracks().forEach(track => track.stop());
+        localScreenStream.getTracks().forEach(t => t.stop());
         localScreenStream = null;
       }
-      socket.emit('screenshare:stop', { roomId: MY_ROOM });
+      socket.emit('screenshare:stop', { roomId: currentRoomId });
       hideScreenShareUI();
-
-      // Buton görünümünü geri al
       document.getElementById('screenShareBtn').classList.replace('bg-red-600', 'bg-indigo-600');
-      document.getElementById('screenShareBtn').classList.replace('hover:bg-red-500', 'hover:bg-indigo-500');
       document.getElementById('screenShareBtnText').textContent = 'Ekran Paylaş';
     }
 
@@ -862,7 +1267,7 @@
       screenSharePlayer.classList.remove('hidden');
       screenSharePlayer.srcObject = stream;
       screenShareBanner.classList.remove('hidden');
-      document.getElementById('screenShareBannerText').textContent = '🖥️ Partnerinizin Ekranı Canlı Yayında (Netflix / Dizi)';
+      document.getElementById('screenShareBannerText').textContent = '🖥️ Canlı Ekran Yayını (Netflix / Dizi)';
       document.getElementById('stopShareBannerBtn').classList.add('hidden');
     }
 
@@ -871,15 +1276,9 @@
       screenSharePlayer.srcObject = null;
       screenShareBanner.classList.add('hidden');
       document.getElementById('stopShareBannerBtn').classList.remove('hidden');
-
-      // Eski oynatıcıya geri dön
-      if (currentVideoType === 'youtube') {
-        youtubeWrapper.classList.remove('hidden');
-      } else if (currentVideoType === 'twitch') {
-        twitchWrapper.classList.remove('hidden');
-      } else {
-        html5Player.classList.remove('hidden');
-      }
+      if (currentVideoType === 'youtube') youtubeWrapper.classList.remove('hidden');
+      else if (currentVideoType === 'twitch') twitchWrapper.classList.remove('hidden');
+      else html5Player.classList.remove('hidden');
     }
 
     socket.on('screenshare:started', ({ sender }) => {
@@ -887,61 +1286,64 @@
       screenShareBanner.classList.remove('hidden');
     });
 
-    socket.on('screenshare:stopped', () => {
-      hideScreenShareUI();
-    });
+    socket.on('screenshare:stopped', () => hideScreenShareUI());
 
     function toggleMic() {
       if (!localStream) return;
-      const audioTrack = localStream.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = !audioTrack.enabled;
-        document.getElementById('toggleMicBtn').textContent = audioTrack.enabled ? '🎙️' : '🔇';
+      const track = localStream.getAudioTracks()[0];
+      if (track) {
+        track.enabled = !track.enabled;
+        document.getElementById('toggleMicBtn').textContent = track.enabled ? '🎙️' : '🔇';
       }
     }
 
     function toggleCam() {
       if (!localStream) return;
-      const videoTrack = localStream.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.enabled = !videoTrack.enabled;
-        document.getElementById('toggleCamBtn').textContent = videoTrack.enabled ? '📹' : '🚫';
-        localCamPlaceholder.classList.toggle('hidden', videoTrack.enabled);
+      const track = localStream.getVideoTracks()[0];
+      if (track) {
+        track.enabled = !track.enabled;
+        document.getElementById('toggleCamBtn').textContent = track.enabled ? '📹' : '🚫';
+        localCamPlaceholder.classList.toggle('hidden', track.enabled);
       }
     }
 
-    // Sayfa Yüklendiğinde WebRTC'yi başlat
     window.addEventListener('DOMContentLoaded', initWebRTC);
 
     // ========================================================
-    // 8. CANLI SOHBET (CHAT) MANTIĞI
+    // 8. SAĞ PANEL (SOHBET, OYNATMA LİSTESİ & KATILIMCILAR)
     // ========================================================
+    function switchSidebarTab(tab) {
+      document.getElementById('tabContentChat').classList.toggle('hidden', tab !== 'chat');
+      document.getElementById('tabContentPlaylist').classList.toggle('hidden', tab !== 'playlist');
+      document.getElementById('tabContentUsers').classList.toggle('hidden', tab !== 'users');
+
+      const tabs = ['chat', 'playlist', 'users'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        if (t === tab) {
+          btn.className = "px-3 py-1.5 rounded-lg bg-purple-600 text-white transition";
+        } else {
+          btn.className = "px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition";
+        }
+      });
+    }
+
+    // Sohbet
     const messagesContainer = document.getElementById('messages');
     const chatInput = document.getElementById('chatInput');
 
     function sendMessage() {
       const text = chatInput.value.trim();
       if (!text) return;
-
-      socket.emit('chat:send', {
-        roomId: MY_ROOM,
-        message: text,
-        sender: MY_NAME,
-        avatar: MY_AVATAR
-      });
+      socket.emit('chat:send', { roomId: currentRoomId, message: text, sender: MY_NAME, avatar: MY_AVATAR });
       chatInput.value = '';
     }
 
     socket.on('chat:receive', (msg) => {
       const msgDiv = document.createElement('div');
-
       if (msg.isSystem) {
         msgDiv.className = 'flex items-center justify-center my-1';
-        msgDiv.innerHTML = `
-          <div class="bg-zinc-800/60 border border-zinc-700/40 text-zinc-400 text-[10px] px-2.5 py-1 rounded-full flex items-center gap-1.5">
-            <span>${msg.message}</span>
-          </div>
-        `;
+        msgDiv.innerHTML = `<div class="bg-zinc-800/60 border border-zinc-700/40 text-zinc-400 text-[10px] px-2.5 py-1 rounded-full text-center">${msg.message}</div>`;
       } else {
         const isMe = msg.sender === MY_NAME;
         msgDiv.className = `flex gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'} items-start`;
@@ -951,7 +1353,7 @@
           <img src="${avatarSrc}" class="w-6 h-6 rounded-full object-cover mt-0.5 border border-zinc-700" />
           <div class="max-w-[80%] flex flex-col ${isMe ? 'items-end' : 'items-start'}">
             <div class="flex items-center gap-1.5 text-[10px] text-zinc-400 mb-0.5">
-              <span class="font-bold ${isMe ? 'text-purple-400' : 'text-pink-400'}">${msg.sender}</span>
+              <span class="font-bold ${isMe ? 'text-purple-400' : 'text-pink-400'}">${escapeHtml(msg.sender)}</span>
               <span>${msg.time || ''}</span>
             </div>
             <div class="px-3 py-1.5 rounded-2xl text-xs break-words shadow-sm ${
@@ -962,13 +1364,110 @@
           </div>
         `;
       }
-
       messagesContainer.appendChild(msgDiv);
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     });
 
+    // Oynatma Listesi
+    function addToPlaylist() {
+      const input = document.getElementById('playlistUrlInput');
+      const url = input.value.trim();
+      if (!url) return;
+      socket.emit('playlist:add', { roomId: currentRoomId, item: { title: url, url } });
+      input.value = '';
+    }
+
+    socket.on('playlist:updated', ({ playlist, currentIndex }) => {
+      updatePlaylistUI(playlist, currentIndex);
+    });
+
+    function updatePlaylistUI(playlist, currentIndex) {
+      document.getElementById('playlistCount').textContent = playlist.length;
+      const container = document.getElementById('playlistItems');
+      container.innerHTML = '';
+
+      if (playlist.length === 0) {
+        container.innerHTML = `<p class="text-zinc-500 text-center py-6 text-xs">Sırada video yok. Yukarıdan ekleyin!</p>`;
+        return;
+      }
+
+      playlist.forEach((item, idx) => {
+        const isCurrent = idx === currentIndex;
+        const row = document.createElement('div');
+        row.className = `p-2.5 rounded-xl border flex items-center justify-between gap-2 ${
+          isCurrent ? 'bg-purple-600/20 border-purple-500/40 text-purple-200' : 'bg-zinc-900 border-zinc-800 text-zinc-300'
+        }`;
+        row.innerHTML = `
+          <div class="flex items-center gap-2 flex-1 min-w-0">
+            <span class="text-[10px] font-bold ${isCurrent ? 'text-purple-400 animate-pulse' : 'text-zinc-500'}">${idx + 1}</span>
+            <span class="truncate font-semibold">${escapeHtml(item.title)}</span>
+          </div>
+          <div class="flex items-center gap-1 flex-shrink-0">
+            <button onclick="playPlaylistItem(${idx})" class="hover:text-purple-300 px-1.5 py-0.5 rounded text-xs" title="Oynat">▶</button>
+            <button onclick="removePlaylistItem('${item.id}')" class="hover:text-red-400 px-1.5 py-0.5 rounded text-xs" title="Sil">✕</button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function playPlaylistItem(index) {
+      socket.emit('playlist:play_index', { roomId: currentRoomId, index });
+    }
+
+    function removePlaylistItem(itemId) {
+      socket.emit('playlist:remove', { roomId: currentRoomId, itemId });
+    }
+
+    // Katılımcılar Listesi
+    function updateUsersListUI(users) {
+      document.getElementById('usersCount').textContent = users.length;
+      const list = document.getElementById('usersList');
+      list.innerHTML = '';
+
+      users.forEach(u => {
+        const row = document.createElement('div');
+        row.className = 'bg-zinc-900 border border-zinc-800 p-2 rounded-xl flex items-center justify-between text-xs';
+        row.innerHTML = `
+          <div class="flex items-center gap-2">
+            <img src="${u.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png'}" class="w-6 h-6 rounded-full object-cover" />
+            <span class="font-semibold text-zinc-200">${escapeHtml(u.username)}</span>
+            ${u.isHost ? '<span class="text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-1.5 py-0.2 rounded font-bold">Host 👑</span>' : ''}
+          </div>
+          ${(currentRoomData?.isHost && u.id !== socket.id) ? `<button onclick="kickUser('${u.id}')" class="text-[11px] bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 px-2 py-0.5 rounded transition">At</button>` : ''}
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    function kickUser(targetId) {
+      if (confirm('Bu kullanıcıyı odadan çıkarmak istediğinize emin misiniz?')) {
+        socket.emit('room:kick_user', { roomId: currentRoomId, targetUserId: targetId });
+      }
+    }
+
+    // Host Ayarları Modal
+    function openHostSettingsModal() {
+      document.getElementById('hostSettingsModal').classList.remove('hidden');
+    }
+    function closeHostSettingsModal() {
+      document.getElementById('hostSettingsModal').classList.add('hidden');
+    }
+
+    function saveHostSettings() {
+      const controlMode = document.getElementById('editControlMode').value;
+      const password = document.getElementById('editRoomPassword').value;
+      socket.emit('room:update_settings', {
+        roomId: currentRoomId,
+        controlMode,
+        password: password || undefined
+      });
+      closeHostSettingsModal();
+    }
+
     function escapeHtml(str) {
-      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
   </script>
 </body>
