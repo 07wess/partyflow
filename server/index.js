@@ -429,15 +429,30 @@ io.on('connection', (socket) => {
 
   // Canlı Sohbet Mesajı
   socket.on('chat:send', (data) => {
-    const { roomId, message, sender, avatar } = data;
-    io.to(roomId).emit('chat:receive', {
+    const targetRoom = (data && data.roomId) || socket.roomId;
+    if (!targetRoom) {
+      console.warn('[Chat] Mesaj iletilemedi, oda bulunamadı. Socket ID:', socket.id);
+      return;
+    }
+
+    if (!socket.rooms.has(targetRoom)) {
+      socket.join(targetRoom);
+      socket.roomId = targetRoom;
+    }
+
+    const messageContent = (data && typeof data.message === 'string') ? data.message.trim() : '';
+    if (!messageContent) return;
+
+    const payload = {
       id: Date.now(),
-      sender: sender || socket.username || 'Anonim',
-      avatar: avatar || socket.avatar || '',
-      message,
+      sender: (data && data.sender) || socket.username || 'Misafir',
+      avatar: (data && data.avatar) || socket.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png',
+      message: messageContent,
       isSystem: false,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    });
+    };
+
+    io.to(targetRoom).emit('chat:receive', payload);
   });
 
   // Video Değiştirme
