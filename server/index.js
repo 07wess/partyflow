@@ -55,8 +55,9 @@ async function sendDiscordWebhook(title, description, color = 0x8b5cf6, fields =
 // Video Tipi Algılayıcı
 function detectVideoType(url) {
   if (!url) return 'youtube';
-  if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
-  if (url.includes('twitch.tv')) return 'twitch';
+  const trimmed = url.trim();
+  if (trimmed.includes('youtube.com') || trimmed.includes('youtu.be') || /^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return 'youtube';
+  if (trimmed.includes('twitch.tv')) return 'twitch';
   return 'direct';
 }
 
